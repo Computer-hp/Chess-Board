@@ -55,8 +55,6 @@ namespace WinFormsApp1
 
         private CPiece? selectedPiece = null;
 
-        private MethodInfo? method = null;
-
         private Label[] timerLabel = new Label[2];
 
         private Timer[] timer = new Timer[2];
@@ -240,36 +238,39 @@ namespace WinFormsApp1
 
                 clickedButton.BackgroundImage = image;
 
-
-                if (check)
+                try
                 {
-                    HandleSituationAfterCheck(king);
+                    if (check)
+                    {
+                        HandleSituationAfterCheck(king);
 
-                    if (!IsCheckmate())
-                        return;
+                        if (!IsCheckmate())
+                            return;
 
-                    var popUp = new RestartForm();
+                        var popUp = new RestartForm();
 
-                    popUp.StartPosition = FormStartPosition.CenterParent;
+                        popUp.StartPosition = FormStartPosition.CenterParent;
 
-                    popUp.ShowDialog(this);
+                        popUp.ShowDialog(this);
 
-                    if (RestartForm.NewGame)
-                        isRestarted = true;
+                        if (RestartForm.NewGame)
+                            isRestarted = true;
 
-                    else if (RestartForm.MainMenu)
-                        this.Close();
+                        else if (RestartForm.MainMenu)
+                            this.Close();
+                    }
 
                     return;
                 }
+                finally
+                {
 
-                ChessBoard.validMoves.Clear();
+                    ChessBoard.validMoves.Clear();
 
-                turn = (turn + 1) % 2;  // Switch the current player's turn
+                    turn = (turn + 1) % 2;  // Switch the current player's turn
 
-                selectedPiece = null;
-
-                return;
+                    selectedPiece = null;
+                }
             }
 
             AvaibleSquares(ChessBoard.Board[x, y]);
@@ -286,7 +287,7 @@ namespace WinFormsApp1
 
             if (selectedPiece.pieceName == "N")
             {
-                ChessBoard.CheckJump(selectedPiece);
+                ChessBoard.CheckKnightMoves(selectedPiece);
                 return;
             }
             else if (selectedPiece.pieceName != "K")
@@ -356,15 +357,18 @@ namespace WinFormsApp1
             else
                 FindDiagonalyDirection(king, x, y);
 
-            if (direction != "")
-            {
-                method = typeof(CMatrixBoard).GetMethod(moveTo);
-                Debug.WriteLine($"\n{direction}");
-                object[] parameters = new object[] { ChessBoard.Board[x, y], 8, direction };
-                method.Invoke(ChessBoard, parameters);
 
-                IsCheck(king);
+            switch (moveTo)
+            {
+                case "Straight":
+                    ChessBoard.Straight(ChessBoard.Board[x, y], 8, direction);
+                    break;
+
+                case "Diagonal":
+                    ChessBoard.Diagonal(ChessBoard.Board[x, y], 8, direction);
+                    break;
             }
+
 
             if (selectedPiece.pieceName == "Q" && !check && moveTo != "Diagonal")
                 DefineMethod("Diagonal", king, x, y);
@@ -497,7 +501,7 @@ namespace WinFormsApp1
                     AvaibleSquares(piece);
 
                     if (piece.pieceName == "P")
-                        ChessBoard.validMoves.RemoveAll(square => square.x == piece.x && square.y == piece.y + UpOrDown);
+                        ChessBoard.validMoves.RemoveAll(square => square.x == piece.x && square.y == piece.y + (-UpOrDown));
 
                     ChessBoard.invalidSquaresKing.RemoveAll(square => ChessBoard.validMoves.Exists(move => move.x == square.x && move.y == square.y));
                 }
@@ -606,6 +610,7 @@ namespace WinFormsApp1
 
 
 
+        // Problem: cannot move the rook once castled
         private void ShortAndLongCastle(int rookX, int Y)
         {
             var tmp = ChessBoard.Board[rookX, Y];  // copy the rook
@@ -655,8 +660,7 @@ namespace WinFormsApp1
 
         private void DiagonalMovementPawn(int x, int y)
         {
-            int oppositeX = x - 1;
-            //x++;
+            int oppositeX = x - 2;
 
             if (x < 8 && (ChessBoard.Board[x, y] == null ||
                 ChessBoard.Board[x, y].pieceName == "K"))
