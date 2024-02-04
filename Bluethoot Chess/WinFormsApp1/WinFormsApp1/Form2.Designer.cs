@@ -42,7 +42,35 @@
             Name = "Form2";
             RightToLeft = RightToLeft.No;
             ShowIcon = false;
+            BackColor = Color.Black;
             ResumeLayout(false);
+        }
+
+
+
+        private void InitializePromotionForm(string pieceTypeDir, string buttonName, int counter)
+        {
+            int formWidth = this.ClientSize.Width;
+            int formHeight = this.ClientSize.Height;
+
+            Bitmap resizedImage = ChessBoardForm.SetImageToButton(new CPiece(0, 0, buttonName, pieceTypeDir));
+
+            Button button = new()
+            {
+                Width = buttonWidth,
+                Height = buttonHeight,
+                Left = (formWidth - buttonWidth) / 2,
+                Top = counter,
+                Name = buttonName,
+                BackColor = Color.Ivory,
+                FlatStyle = FlatStyle.Flat,
+                FlatAppearance = { BorderSize = 1 },
+                BackgroundImage = resizedImage,
+                BackgroundImageLayout = ImageLayout.Zoom
+            };
+
+            button.Click += Piece_Promote;
+            this.Controls.Add(button);
         }
 
         #endregion

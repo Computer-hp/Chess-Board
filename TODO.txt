@@ -1,0 +1,9 @@
+fix:
+
+ChessBoard.cs
+
+Form1.cs
+
+Form2.cs
+
+Form3.cs

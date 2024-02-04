@@ -126,9 +126,7 @@ namespace WinFormsApp1
                     ChessBoard.copyMoves.AddRange(ChessBoard.stopCheckWithPiece[key]);
             }
             else if (selectedPiece.pieceName == "K")
-            {
                 ChessBoard.copyMoves.AddRange(ChessBoard.validMoves);
-            }
 
             if (!ChessBoard.copyMoves.Exists(
                     square => ChessBoard.validMoves.Exists(
@@ -213,7 +211,7 @@ namespace WinFormsApp1
                 CPiece king = FindKing(currentPlayer);
 
                 // finds only the moves of the piece that gives check which are after used in StopCheck()
-                if (selectedPiece.pieceName != "K")
+                if (selectedPiece.pieceName != "K")   // can't give check with O-O or O-O-O
                 {
                     ChessBoard.validMoves.Clear();
 
@@ -395,27 +393,25 @@ namespace WinFormsApp1
 
         private void FindStraightDirection(CPiece king, int x, int y)
         {
-            if (x > king.x && y == king.y)
+            if (y == king.y)
             {
-                direction = "Left";
+                if (x > king.x)
+                    direction = "Left";
+
+                else if (x < king.x)
+                    direction = "Right";
+
                 return;
             }
 
-            if (x < king.x && y == king.y)
+            if (x == king.x)
             {
-                direction = "Right";
-                return;
-            }
+                if (y > king.y)
+                    direction = "Down";
 
-            if (y > king.y && x == king.x)
-            {
-                direction = "Down";
-                return;
-            }
+                else if (y < king.y)
+                    direction = "Up";
 
-            if (y < king.y && x == king.x)
-            {
-                direction = "Up";
                 return;
             }
         }
@@ -424,27 +420,25 @@ namespace WinFormsApp1
 
         private void FindDiagonalyDirection(CPiece king, int x, int y)
         {
-            if (x > king.x && y > king.y)
+            if (y > king.y)
             {
-                direction = "LeftDown";
+                if (x > king.x)
+                    direction = "LeftDown";
+
+                else if (x < king.x)
+                    direction = "RightDown";
+
                 return;
             }
 
-            if (x < king.x && y < king.y)
+            if (y < king.y)
             {
-                direction = "RightUp";
-                return;
-            }
+                if (x < king.x)
+                    direction = "RightUp";
 
-            if (y > king.y && x < king.x)
-            {
-                direction = "RightDown";
-                return;
-            }
+                else if (x > king.x)
+                    direction = "LeftUp";
 
-            if (y < king.y && x > king.x)
-            {
-                direction = "LeftUp";
                 return;
             }
         }
@@ -597,40 +591,40 @@ namespace WinFormsApp1
 
 
 
-        private void FirstKingMove(int x, int y, int Y)
+        private void FirstKingMove(int previusKingX, int previusKingY, int Y)
         {
             firstKingMove[turn] = true;
 
-            if (O_O[turn] && x == 6 && y == Y)
+            if (O_O[turn] && previusKingX == 6 && previusKingY == Y)
                 ShortAndLongCastle(7, Y);
 
-            if (O_O_O[turn] && x == 2 && y == Y)
+            else if (O_O_O[turn] && previusKingX == 2 && previusKingY == Y)
                 ShortAndLongCastle(0, Y);
         }
 
 
 
-        // Problem: cannot move the rook once castled
         private void ShortAndLongCastle(int rookX, int Y)
         {
-            var tmp = ChessBoard.Board[rookX, Y];  // copy the rook
+            var tmpRook = ChessBoard.Board[rookX, Y];  // copies the rook
 
-            FirstRookMove(tmp, rookX, Y, Y);
+            FirstRookMove(tmpRook, rookX, Y, Y);
 
             ChessBoard.Board[rookX, Y] = null;
 
-            Button RookSquare = GetButtonAtPosition(rookX, Y);
-            RookSquare.BackgroundImage = null;
+            Button rookSquare = GetButtonAtPosition(rookX, Y);
+            rookSquare.BackgroundImage = null;
 
             //transpose the rook
             rookX = (rookX == 0) ? 3 : 5;
 
-            ChessBoard.Board[rookX, Y] = tmp;
+            tmpRook.x = rookX;
+            ChessBoard.Board[rookX, Y] = tmpRook;
 
-            Bitmap RookImage = SetImageToButton(tmp);
+            Bitmap rookImage = SetImageToButton(tmpRook);
 
-            RookSquare = GetButtonAtPosition(rookX, Y);
-            RookSquare.BackgroundImage = RookImage;
+            rookSquare = GetButtonAtPosition(rookX, Y);
+            rookSquare.BackgroundImage = rookImage;
         }
 
 

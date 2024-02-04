@@ -23,11 +23,7 @@ namespace WinFormsApp1
         {
             InitializeComponent();
 
-            this.BackColor = Color.Black;
-
-            string pieceTypeDir;
-
-            pieceTypeDir = (turn == 0) ? "white" : "black";
+            string pieceTypeDir = (turn == 0) ? "white" : "black";
 
             int counter = 0;
 
@@ -38,24 +34,7 @@ namespace WinFormsApp1
             }
         }
 
-        private void InitializePromotionForm(string pieceTypeDir, string buttonName, int counter)
-        {
-            int formWidth = this.ClientSize.Width;
-            int formHeight = this.ClientSize.Height;
 
-            Bitmap resizedImage = ChessBoardForm.SetImageToButton(new CPiece(0, 0, buttonName, pieceTypeDir));
-
-            Button button = new()
-            {
-                Width = buttonWidth, Height = buttonHeight, 
-                Left = (formWidth - buttonWidth) / 2, Top = counter, Name = buttonName, 
-                BackColor = Color.Ivory, FlatStyle = FlatStyle.Flat, FlatAppearance = { BorderSize = 1 }, 
-                BackgroundImage = resizedImage, BackgroundImageLayout = ImageLayout.Zoom
-            };
-
-            button.Click += Piece_Promote;
-            this.Controls.Add(button);
-        }
 
         private void Piece_Promote(object sender, EventArgs e)
         {
