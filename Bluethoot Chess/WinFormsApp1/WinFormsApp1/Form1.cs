@@ -40,7 +40,7 @@ namespace WinFormsApp1
 
         private bool firstMove = false;
 
-        private bool check = false;
+        private bool isCheck = false;
 
         private bool[] firstKingMove = { false, false };
 
@@ -137,10 +137,9 @@ namespace WinFormsApp1
             foreach (var entry in ChessBoard.stopCheckWithPiece)
                 entry.Value.Clear();
 
-            ChessBoard.stopCheckWithPiece.Clear(); // Clear the entire dictionary
+            ChessBoard.stopCheckWithPiece.Clear();
 
-            check = false;
-
+            isCheck = false;
             return true;
         }
 
@@ -151,51 +150,28 @@ namespace WinFormsApp1
             Button clickedButton = (Button)sender;
             var position = (ValueTuple<int, int>)clickedButton.Tag;
 
-            int x = position.Item1;
-            int y = position.Item2;
+            int dest_piece_x = position.Item1;
+            int dest_piece_y = position.Item2;
 
             currentPlayer = (turn == 0) ? "white" : "black";
 
-            int Y = (currentPlayer == "white") ? 0 : 7;
+            int up_or_down = (currentPlayer == "white") ? 0 : 7;
 
             UpOrDown = (currentPlayer == "white") ? 1 : -1;
 
-            if (ChessBoard.Board[x, y] == null || ChessBoard.Board[x, y].pieceType != currentPlayer)
+            if (ChessBoard.Board[dest_piece_x, dest_piece_y] == null || ChessBoard.Board[dest_piece_x, dest_piece_y].pieceType != currentPlayer)
             {
-                if (!ChessBoard.validMoves.Exists(item => item.x == x && item.y == y))
+                if (!ChessBoard.validMoves.Exists(item => item.x == dest_piece_x && item.y == dest_piece_y))
                     return;
 
                 if (selectedPiece == null)
                     return;
 
-                int previous_piece_x = selectedPiece.x, previous_piece_y = selectedPiece.y;
+                if (isCheck && !MoveIsLegalWhenCheck(dest_piece_x, dest_piece_y))
+                    return;
 
-                // check handle
-                if (check)
-                    if (!MoveIsLegalWhenCheck(x, y))
-                        return;
+                ControlPieceMovement(selectedPiece.x, selectedPiece.y, dest_piece_x, dest_piece_y, up_or_down);
 
-                if (selectedPiece.pieceName == "P")
-                    PawnPromotion(selectedPiece, x, y);
-
-
-                Button originalSquare = GetButtonAtPosition(previous_piece_x, previous_piece_y);
-                originalSquare.BackgroundImage = null;
-
-
-                ChessBoard.Board[previous_piece_x, previous_piece_y] = null;
-
-                ChessBoard.Board[x, y] = new CPiece(x, y, selectedPiece.pieceName, selectedPiece.pieceType);
-
-
-                if (selectedPiece.pieceName == "K" && !firstKingMove[turn])
-                    FirstKingMove(x, y, Y);
-
-                if (selectedPiece.pieceName == "R")
-                    FirstRookMove(selectedPiece, x, y, Y);
-
-                ChessBoard.Board[x, y].x = x;
-                ChessBoard.Board[x, y].y = y;
 
                 if (!firstMove)
                 {
@@ -210,35 +186,14 @@ namespace WinFormsApp1
 
                 CPiece king = FindKing(currentPlayer);
 
-                // finds only the moves of the piece that gives check which are after used in StopCheck()
-                if (selectedPiece.pieceName != "K")   // can't give check with O-O or O-O-O
-                {
-                    ChessBoard.validMoves.Clear();
+                if (selectedPiece.pieceName != "K")
+                    ControlIfPieceHasGivenCheck(king, dest_piece_x, dest_piece_y);
 
-                    direction = "";
-
-                    if (selectedPiece.pieceName == "R")
-                        DefineMethod("Straight", king, x, y);
-
-                    if (selectedPiece.pieceName == "B")
-                        DefineMethod("Diagonal", king, x, y);
-
-                    if (selectedPiece.pieceName == "Q")
-                        DefineMethod("Straight", king, x, y);
-
-                    // because the piece that gives check can also be captured to stop check, neccessary for Knight and Pawn
-                    ChessBoard.validMoves.Add(new CSquare(x, y));
-
-                    IsCheck(king);
-                }
-
-                Bitmap image = SetImageToButton(ChessBoard.Board[x, y]);
-
-                clickedButton.BackgroundImage = image;
+                clickedButton.BackgroundImage = SetImageToButton(ChessBoard.Board[dest_piece_x, dest_piece_y]);
 
                 try
                 {
-                    if (check)
+                    if (isCheck)
                     {
                         HandleSituationAfterCheck(king);
 
@@ -265,21 +220,21 @@ namespace WinFormsApp1
 
                     ChessBoard.validMoves.Clear();
 
-                    turn = (turn + 1) % 2;  // Switch the current player's turn
+                    turn = (turn + 1) % 2;
 
                     selectedPiece = null;
                 }
             }
 
-            AvaibleSquares(ChessBoard.Board[x, y]);
-            selectedPiece = ChessBoard.Board[x, y];
+            AvaibleSquares(ChessBoard.Board[dest_piece_x, dest_piece_y]);
+            selectedPiece = ChessBoard.Board[dest_piece_x, dest_piece_y];
 
             Debug.WriteLine($"{selectedPiece.pieceName}, {selectedPiece.pieceType}");
             Debug.WriteLine(ChessBoard.ToString() + "\n");
 
-            if (ChessBoard.Board[x, y].pieceName == "P")
+            if (ChessBoard.Board[dest_piece_x, dest_piece_y].pieceName == "P")
             { 
-                DiagonalMovementPawn(x + 1, y + UpOrDown);
+                DiagonalMovementPawn(dest_piece_x + 1, dest_piece_y + UpOrDown);
                 return;
             }
 
@@ -298,10 +253,59 @@ namespace WinFormsApp1
 
             // Check if  O-O  or  O-O-O  is possible.
             if (!O_O[turn])
-                CheckCastle(6, Y, 5, ref O_O[turn], hRookFirstMove[turn]);
+                CheckCastle(6, up_or_down, 5, ref O_O[turn], hRookFirstMove[turn]);
 
             if (!O_O_O[turn])
-                CheckCastle(2, Y, 3, ref O_O_O[turn], aRookFirstMove[turn]);
+                CheckCastle(2, up_or_down, 3, ref O_O_O[turn], aRookFirstMove[turn]);
+        }
+
+
+
+        private void ControlPieceMovement(int previous_piece_x, int previous_piece_y, int dest_piece_x, int dest_piece_y, int up_or_down)
+        {
+            if (selectedPiece.pieceName == "P")
+                PawnPromotion(selectedPiece, dest_piece_x, dest_piece_y);
+
+
+            Button originalSquare = GetButtonAtPosition(previous_piece_x, previous_piece_y);
+            originalSquare.BackgroundImage = null;
+            ChessBoard.Board[previous_piece_x, previous_piece_y] = null;
+            ChessBoard.Board[dest_piece_x, dest_piece_y] = new CPiece(dest_piece_x, dest_piece_y, 
+                                                                            selectedPiece.pieceName, 
+                                                                                selectedPiece.pieceType);
+
+            if (selectedPiece.pieceName == "K" && !firstKingMove[turn])
+                FirstKingMove(dest_piece_x, dest_piece_y, up_or_down);
+
+            else if (selectedPiece.pieceName == "R")
+                FirstRookMove(selectedPiece, dest_piece_x, dest_piece_y, up_or_down);
+
+            ref CPiece movedPiece = ref ChessBoard.Board[dest_piece_x, dest_piece_y];
+
+            movedPiece.x = dest_piece_x;
+            movedPiece.y = dest_piece_y;
+        }
+
+
+
+        private void ControlIfPieceHasGivenCheck(CPiece king, int dest_piece_x, int dest_piece_y)
+        {
+            ChessBoard.validMoves.Clear();
+
+            direction = "";
+
+            if (selectedPiece.pieceName == "R")
+                DefineMethod("Straight", king, dest_piece_x, dest_piece_y);
+
+            if (selectedPiece.pieceName == "B")
+                DefineMethod("Diagonal", king, dest_piece_x, dest_piece_y);
+
+            if (selectedPiece.pieceName == "Q")
+                DefineMethod("Straight", king, dest_piece_x, dest_piece_y);
+
+            // piece that gives check can also be captured to stop check, neccessary for Knight and Pawn
+            ChessBoard.validMoves.Add(new CSquare(dest_piece_x, dest_piece_y));
+            IsCheck(king);
         }
 
 
@@ -315,17 +319,20 @@ namespace WinFormsApp1
 
             foreach (var piece in ChessBoard.Board)
             {
-                if (piece != null && piece.pieceType != selectedPiece.pieceType && piece.pieceName != "K")
-                {
-                    AvaibleSquares(piece);
+                if (piece == null ||
+                    piece.pieceName == "K" ||
+                    piece.pieceType == selectedPiece.pieceType)
 
-                    if (piece.pieceName == "P")
-                        DiagonalMovementPawn(piece.x + 1, piece.y - UpOrDown);
+                    continue;
+                
+                AvaibleSquares(piece);
 
-                    ChessBoard.validMoves.RemoveAll(move => move.x == king.x && move.y == king.y);
+                if (piece.pieceName == "P")
+                    DiagonalMovementPawn(piece.x + 1, piece.y - UpOrDown);
 
-                    StopCheck(piece);
-                }
+                ChessBoard.validMoves.RemoveAll(move => move.x == king.x && move.y == king.y);
+
+                StopCheck(piece);
             }
 
             AvaibleSquares(king);
@@ -368,7 +375,7 @@ namespace WinFormsApp1
             }
 
 
-            if (selectedPiece.pieceName == "Q" && !check && moveTo != "Diagonal")
+            if (selectedPiece.pieceName == "Q" && !isCheck && moveTo != "Diagonal")
                 DefineMethod("Diagonal", king, x, y);
         }
 
@@ -561,11 +568,11 @@ namespace WinFormsApp1
         private void IsCheck(CPiece king)
         {
             if (ChessBoard.validMoves.Exists(move => move.x == king.x && move.y == king.y))
-                check = true;
+                isCheck = true;
             else
-                check = false;
+                isCheck = false;
 
-            Debug.WriteLine("\ncheck = " + check + '\n');
+            Debug.WriteLine("\ncheck = " + isCheck + '\n');
         }
 
 
