@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace WinFormsApp1
 {
-    public partial class Form2 : Form
+    public partial class PromotionForm : Form
     {
         public string PieceName { get; set; }
 
@@ -19,7 +19,7 @@ namespace WinFormsApp1
         private readonly List<string> promotionPiecesName = new() { "Q", "R", "B", "N" };
 
 
-        public Form2(int turn)
+        public PromotionForm(int turn)
         {
             InitializeComponent();
 

@@ -144,7 +144,7 @@ namespace WinFormsApp1
         }
 
 
-        // TODO after castling short the rook doesn't move on the e square
+        // TODO error when giving check with pawn after capturing diagonally
         private void Button_Click(object sender, EventArgs e)
         {
             Button clickedButton = (Button)sender;
@@ -680,7 +680,7 @@ namespace WinFormsApp1
                 selectedPiece.y - 1 == 0 && selectedPiece.pieceType == "black")
             {
 
-                var promotion = new Form2(turn);
+                var promotion = new PromotionForm(turn);
                 promotion.ShowDialog();
 
                 this.selectedPiece = new CPiece(x, y, promotion.PieceName, selectedPiece.pieceType);
