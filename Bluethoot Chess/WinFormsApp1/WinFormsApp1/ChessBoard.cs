@@ -14,7 +14,8 @@ namespace WinFormsApp1
 {
     public class CMatrixBoard
     {
-        private const int boardSize = 8;
+        private const int BOARD_SIZE = 8;
+        private const int N_DIRECTIONS = 4;
 
         private int x, y, oppositeX, oppositeY;
 
@@ -38,7 +39,7 @@ namespace WinFormsApp1
 
         public CMatrixBoard()
         {
-            Board = new CPiece[boardSize, boardSize];
+            Board = new CPiece[BOARD_SIZE, BOARD_SIZE];
         }
 
         
@@ -75,7 +76,7 @@ namespace WinFormsApp1
                               (P.pieceType == "black" && P.y == 6))
                                 ? true : false;
 
-            if (P.y + squareUpOrDown < 0 || P.y + squareUpOrDown >= boardSize)
+            if (P.y + squareUpOrDown < 0 || P.y + squareUpOrDown >= BOARD_SIZE)
                 return;
 
             if (Board[P.x, P.y + squareUpOrDown] == null)
@@ -87,35 +88,35 @@ namespace WinFormsApp1
             validMoves.Add(new CSquare(P.x + squareUpOrDown, P.y + squareUpOrDown));
             validMoves.Add(new CSquare(P.x - squareUpOrDown, P.y + squareUpOrDown));
 
-            validMoves.RemoveAll(square => square.x < 0 || square.x >= boardSize);
+            validMoves.RemoveAll(square => square.x < 0 || square.x >= BOARD_SIZE);
         }
 
 
 
         public void Straight(CPiece P, int times, string direction)
         {
-            x = P.x; y = P.y;
+            /*x = P.x; y = P.y;
 
-            int counter = 2;
+//            int counter = 2;
 
             right = true; left = true; up = true; down = true;
 
             for (int i = 0; i < times; i++)
             {
-                x++; y++;
-                oppositeX = x - counter; oppositeY = y - counter;
+    //            x++; y++;
+  //              oppositeX = x - counter; oppositeY = y - counter;
 
                 switch (direction)
                 {
                     case "":
-                        Up(this, P);
+                        Up(this, P, i + 1);
                         Down(this, P);
                         Left(this, P);
                         Right(this, P);
                         break;
 
                     case "Up":
-                        Up(this, P);
+                        Up(this, P, i + 1);
                         break;
 
                     case "Down":
@@ -131,17 +132,88 @@ namespace WinFormsApp1
                         break;
                 }
 
-                counter += 2;
+//                counter += 2;
+            }
+            */
+
+            CSquare? incrementForNextSquare = null;
+
+
+            for (int i = 0; i < N_DIRECTIONS; i++)
+            {
+                switch (direction)
+                {
+                    case "Up":
+                        incrementForNextSquare = new(0, 1);
+                        break;
+
+
+                    case "Down":
+                        incrementForNextSquare = new(0, -1);
+                        break;
+
+
+                    case "Right":
+                        incrementForNextSquare = new(1, 0);
+                        break;
+
+
+                    case "Left":
+                        incrementForNextSquare = new(-1, 0);
+                        break;
+                }
+
+                CalculateStraightDirections(P, incrementForNextSquare);
+            }
+        }
+        
+                                                       // using switch case determine the value; if direction == Up --> incrementForNextSquare.x = 0 .y = 1
+                                                                                                              // Down ---> .x = 0 .y = -1
+        public void CalculateStraightDirections(CPiece P, CSquare? incrementForNextSquare)
+        {
+            int destinationX = P.x, destinationY = P.y;
+
+            for (int i = 1; i < BOARD_SIZE; i++)
+            {
+                destinationX += incrementForNextSquare.x;
+                destinationY += incrementForNextSquare.y;
+
+                CPiece tmpPiece = Board[destinationX, destinationY];
+
+                if (tmpPiece != null)
+                {
+                    if (tmpPiece.pieceType == P.pieceType)
+                        return;
+
+                    validMoves.Add(new CSquare(destinationX, destinationY));
+                    return;
+                }
+
+                validMoves.Add(new CSquare(destinationX, destinationY));
             }
         }
 
-
+/*
         public void Up(CMatrixBoard B, CPiece P)
         {
             if (y >= boardSize || !up)
                 return;
 
             validMoves.Add(new CSquare(P.x, y));
+
+            if (B.Board[P.x, y] != null)
+                up = false;
+        }*/
+
+        /*
+        public void Up(CMatrixBoard B, CPiece P, int incrementForNextSquare)
+        {
+            int nextSquare = P.y + incrementForNextSquare;
+            
+            if (nextSquare > boardSize)
+                return;
+
+            validMoves.Add(new CSquare(P.x, nextSquare));
 
             if (B.Board[P.x, y] != null)
                 up = false;
@@ -182,11 +254,12 @@ namespace WinFormsApp1
             if (B.Board[x, P.y] != null)
                 right = false;
         }
-
+        */
 
 
         public void Diagonal(CPiece P, int times, string direction)
         {
+            /*
             x = P.x; y = P.y;
 
             int counter = 2;
@@ -226,10 +299,13 @@ namespace WinFormsApp1
 
                 counter += 2;
             }
+            */
+
+
 
         }
 
-
+/*
         public void RightUp(CMatrixBoard B, CPiece P)
         {
             if (x >= boardSize || y >= boardSize || !rightUp)
@@ -276,7 +352,7 @@ namespace WinFormsApp1
             if (B.Board[oppositeX, oppositeY] != null)
                 leftDown = false;
         }
-
+*/
 
         public void Jump(CPiece P)
         {
@@ -307,10 +383,10 @@ namespace WinFormsApp1
 
         private void JumpRight(int provisoryX, int provisoryY)
         {
-            if (provisoryX >= boardSize)
+            if (provisoryX >= BOARD_SIZE)
                 return;
 
-            if (provisoryY < boardSize)
+            if (provisoryY < BOARD_SIZE)
                 validMoves.Add(new CSquare(provisoryX, provisoryY));
 
             if (oppositeY >= 0)
@@ -323,7 +399,7 @@ namespace WinFormsApp1
             if (oppositeX < 0)
                 return;
 
-            if (provisoryY < boardSize)
+            if (provisoryY < BOARD_SIZE)
                 validMoves.Add(new CSquare(oppositeX, provisoryY));
 
             if (oppositeY >= 0)
@@ -333,9 +409,9 @@ namespace WinFormsApp1
 
         public void CheckKnightMoves(CPiece P)
         {
-            for (int x = 0; x < boardSize; x++)
+            for (int x = 0; x < BOARD_SIZE; x++)
             {
-                for (int y = 0; y < boardSize; y++)
+                for (int y = 0; y < BOARD_SIZE; y++)
                 {
                     if (Board[x, y] != null && Board[x, y].pieceType == P.pieceType)
                         if (validMoves.Exists(item => item.x == x && item.y == y) == true)
