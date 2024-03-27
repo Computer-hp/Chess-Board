@@ -297,14 +297,22 @@ namespace WinFormsApp1
             if (selectedPiece.pieceName == "R")
                 DefineMethod("Straight", king, dest_piece_x, dest_piece_y);
 
-            if (selectedPiece.pieceName == "B")
+            else if (selectedPiece.pieceName == "B")
                 DefineMethod("Diagonal", king, dest_piece_x, dest_piece_y);
 
-            if (selectedPiece.pieceName == "Q")
+            else if (selectedPiece.pieceName == "Q")
                 DefineMethod("Straight", king, dest_piece_x, dest_piece_y);
 
             // piece that gives check can also be captured to stop check, neccessary for Knight and Pawn
             ChessBoard.validMoves.Add(new CSquare(dest_piece_x, dest_piece_y));
+
+            Debug.Write("\nvalidMoves = ");
+
+            foreach (var e in ChessBoard.validMoves)
+                Debug.WriteLine($"[{e.x}, {e.y}] ");
+
+            Debug.Write('\n');
+
             IsCheck(king);
         }
 
@@ -360,8 +368,9 @@ namespace WinFormsApp1
             if (moveTo == "Straight")
                 FindStraightDirection(king, x, y);
             else
-                FindDiagonalyDirection(king, x, y);
+                FindDiagonalDirection(king, x, y);
 
+            Debug.Write($"\ndirection = {direction}\n");
 
             switch (moveTo)
             {
@@ -373,7 +382,6 @@ namespace WinFormsApp1
                     ChessBoard.Diagonal(ChessBoard.Board[x, y], 8, direction);
                     break;
             }
-
 
             if (selectedPiece.pieceName == "Q" && !isCheck && moveTo != "Diagonal")
                 DefineMethod("Diagonal", king, x, y);
@@ -393,6 +401,7 @@ namespace WinFormsApp1
                 castle = true;
                 return;
             }
+
             castle = false;
         }
 
@@ -401,53 +410,43 @@ namespace WinFormsApp1
         private void FindStraightDirection(CPiece king, int x, int y)
         {
             if (y == king.y)
-            {
+
                 if (x > king.x)
                     direction = "Left";
 
                 else if (x < king.x)
                     direction = "Right";
 
-                return;
-            }
 
             if (x == king.x)
-            {
+
                 if (y > king.y)
                     direction = "Down";
 
                 else if (y < king.y)
                     direction = "Up";
-
-                return;
-            }
         }
 
 
 
-        private void FindDiagonalyDirection(CPiece king, int x, int y)
+        private void FindDiagonalDirection(CPiece king, int x, int y)
         {
             if (y > king.y)
-            {
+
                 if (x > king.x)
                     direction = "LeftDown";
 
                 else if (x < king.x)
                     direction = "RightDown";
 
-                return;
-            }
 
-            if (y < king.y)
-            {
+            else if (y < king.y)
+
                 if (x < king.x)
                     direction = "RightUp";
 
                 else if (x > king.x)
                     direction = "LeftUp";
-
-                return;
-            }
         }
 
 
@@ -521,7 +520,6 @@ namespace WinFormsApp1
             ref CMatrixBoard B = ref ChessBoard;
 
             for (int x = king.x - 1; x < king.x + 2; x++)
-            {
                 for (int y = king.y - 1; y < king.y + 2; y++)
                 {
                     if (x >= 0 && x < boardSize && 
@@ -530,7 +528,6 @@ namespace WinFormsApp1
 
                         FindInvalidCapturesKing(king, B.Board[x, y]);
                 }
-            }
         }
 
 
