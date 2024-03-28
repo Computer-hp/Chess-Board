@@ -15,6 +15,7 @@ namespace WinFormsApp1
     public class CMatrixBoard
     {
         private const int BOARD_SIZE = 8;
+        private const int NUMBER_OF_DIRECTIONS = 8;
 
         private int x, y, oppositeX, oppositeY;
 
@@ -30,21 +31,24 @@ namespace WinFormsApp1
 
         public Dictionary<Tuple<int, int>, List<CSquare>> stopCheckWithPiece { get; set; } = new();
 
-        private static readonly Dictionary<string, CSquare> straightDirections = new()
+        private enum PieceTypeOfMovement
         {
-            { "Up", new CSquare(0, 1) },
-            { "Down", new CSquare(0, -1) },
-            { "Right", new CSquare(1, 0) },
-            { "Left", new CSquare(-1, 0) }
+            Rook = 0,
+            Bishop = 1
         };
 
-        private static readonly Dictionary<string, CSquare> diagonalDirections = new()
+        private static readonly (string, CSquare)[] linearDirections =
         {
-            { "RightUp", new CSquare(1, 1) },
-            { "RightDown", new CSquare(1, -1) },
-            { "LeftUp", new CSquare(-1, 1) },
-            { "LeftDown", new CSquare(-1, -1) }
+                ( "Up", new CSquare(0, 1) ),
+                ( "Down", new CSquare(0, -1) ),
+                ( "Right", new CSquare(1, 0) ),
+                ( "Left", new CSquare(-1, 0) ),
+                ( "RightUp", new CSquare(1, 1) ),
+                ( "RightDown", new CSquare(1, -1) ),
+                ( "LeftUp", new CSquare(-1, 1) ),
+                ( "LeftDown", new CSquare(-1, -1) ),
         };
+
 
 
         public CMatrixBoard()
@@ -101,31 +105,43 @@ namespace WinFormsApp1
             validMoves.RemoveAll(square => square.x < 0 || square.x >= BOARD_SIZE);
         }
 
-
-
-        public void Straight(CPiece P, int times, string direction)
+        
+        public void CalculateMoves(CPiece piece, string direction)
         {
-            if (!string.IsNullOrEmpty(direction))
+            validMoves.Clear();
+
+            switch (piece.pieceName)
             {
-                CalculateDirections(P, straightDirections[direction], times);
-                return;
+                case "P":
+                    Pawns(piece);
+                    return;
+                    
+                case "N":
+                    Jump(piece);
+                    return;
             }
 
-            foreach (var kvp in straightDirections)
-                CalculateDirections(P, kvp.Value, times);
+            int times = (piece.pieceName == "K") ? 1 : BOARD_SIZE;
+            int endingIndexForDirections = (piece.pieceName == "B") ? NUMBER_OF_DIRECTIONS / 2 : NUMBER_OF_DIRECTIONS;
+
+            ManageLinearDirections(piece, times, endingIndexForDirections, direction);
         }
 
 
-        public void Diagonal(CPiece P, int times, string direction)
+        public void ManageLinearDirections(CPiece piece, int times, int endingIndexForDirections, string direction)
         {
             if (!string.IsNullOrEmpty(direction))
             {
-                CalculateDirections(P, diagonalDirections[direction], times);
+                CalculateDirections(piece, linearDirections.First(storedDirection => storedDirection.Item1 == direction).Item2, times);
                 return;
             }
 
-            foreach (var kvp in diagonalDirections)
-                CalculateDirections(P, kvp.Value, times);
+            int startingIndexForDirections = (piece.pieceName == "R") ? 0 : (piece.pieceName == "B") ? 4 : 1;
+
+
+
+            for (int i = startingIndexForDirections; i < endingIndexForDirections; i++)
+                CalculateDirections(piece, linearDirections[i].Item2, times);
         }
 
 
@@ -149,9 +165,6 @@ namespace WinFormsApp1
 
                 if (tmpPiece != null)
                 {
-                    if (tmpPiece.pieceType == P.pieceType)
-                        return;
-
                     validMoves.Add(new CSquare(destinationX, destinationY));
                     return;
                 }

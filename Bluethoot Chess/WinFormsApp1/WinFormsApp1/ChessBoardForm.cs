@@ -146,16 +146,18 @@ namespace WinFormsApp1
             AvaibleSquares(ChessBoard.Board[destinationX, destinationY]);
             selectedPiece = ChessBoard.Board[destinationX, destinationY];
 
+
             Debug.WriteLine($"{selectedPiece.pieceName}, {selectedPiece.pieceType}");
             Debug.WriteLine(ChessBoard.ToString() + "\n");
 
-            if (ChessBoard.Board[destinationX, destinationY].pieceName == "P")
+
+            if (selectedPiece.pieceName == "P")
             { 
                 DiagonalMovementPawn(destinationX + 1, destinationY + UpOrDown);
                 return;
             }
 
-            if (selectedPiece.pieceName == "N")
+            else if (selectedPiece.pieceName == "N")
             {
                 ChessBoard.CheckKnightMoves(selectedPiece);
                 return;
@@ -187,105 +189,111 @@ namespace WinFormsApp1
         {
             var destinationSquare = ChessBoard.Board[destinationX, destinationY];
 
-            if ((destinationSquare == null || destinationSquare.pieceType != currentPlayer) &&
-                (!IsDestinationSquareValid(destinationX, destinationY))
-)
+            if (!IsDestinationSquareValid(destinationSquare) ||
+                (!IsMoveLegal(destinationX, destinationY)))
+
+                return;
+
+            if (isCheck && !IsMoveLegalWhenCheck(destinationX, destinationY))
+                return;
+
+            ManagePieceMovement(selectedPiece.x, selectedPiece.y, destinationX, destinationY, backRank);
+
+            if (!firstMove)
             {
-                if (isCheck && !MoveIsLegalWhenCheck(destinationX, destinationY))
+                firstMove = true;
+                timer[1].Start();
+            }                           
+                                        // control 'if else' later
+                                        // use 2 threads, whiteClockThread and blackClockThread
+                                        //   that wait for each other
+            else
+            {
+                timer[turn + UpOrDown].Stop();
+                timer[turn].Start();
+            }
+
+            CPiece king = FindKing(currentPlayer);
+
+            if (selectedPiece.pieceName != "K")
+                ControlIfPieceHasGivenCheck(king, destinationX, destinationY);
+
+            clickedButton.BackgroundImage = SetImageToButton(ChessBoard.Board[destinationX, destinationY]);
+
+            try
+            {
+                if (!isCheck)
                     return;
-                    
 
-                ControlPieceMovement(selectedPiece.x, selectedPiece.y, destinationX, destinationY, backRank);
+                HandleSituationAfterCheck(king);
 
+                if (!IsCheckmate())
+                    return;
 
-                if (!firstMove)
-                {
-                    firstMove = true;
-                    timer[1].Start();
-                }                           
-                                            // control 'if else' later
-                else
-                {
-                    timer[turn + UpOrDown].Stop();
-                    timer[turn].Start();
-                }
+                var popUp = new RestartForm();
 
+                popUp.StartPosition = FormStartPosition.CenterParent;
 
-                CPiece king = FindKing(currentPlayer);
+                popUp.ShowDialog(this);
 
-                if (selectedPiece.pieceName != "K")
-                    ControlIfPieceHasGivenCheck(king, destinationX, destinationY);
+                if (RestartForm.NewGame)
+                    isRestarted = true;
 
-                clickedButton.BackgroundImage = SetImageToButton(ChessBoard.Board[destinationX, destinationY]);
+                else if (RestartForm.MainMenu)
+                    this.Close();
+            }
+            finally
+            {
 
-                try
-                {
-                    if (!isCheck)
-                        return;
+                ChessBoard.validMoves.Clear();
 
-                        HandleSituationAfterCheck(king);
+                turn = (turn + 1) % 2;
 
-                        if (!IsCheckmate())
-                            return;
-
-                        var popUp = new RestartForm();
-
-                        popUp.StartPosition = FormStartPosition.CenterParent;
-
-                        popUp.ShowDialog(this);
-
-                        if (RestartForm.NewGame)
-                            isRestarted = true;
-
-                        else if (RestartForm.MainMenu)
-                            this.Close();
-                }
-                finally
-                {
-
-                    ChessBoard.validMoves.Clear();
-
-                    turn = (turn + 1) % 2;
-
-                    selectedPiece = null;
-                }
+                selectedPiece = null;
             }
         }
 
 
-        private bool IsDestinationSquareValid(int destPieceX, int destPieceY)
+        private bool IsDestinationSquareValid(CPiece destinationSquare)
         {
-            return ChessBoard.validMoves.Exists(item => item.x == destPieceX && item.y == destPieceY);
+            return (destinationSquare == null || destinationSquare.pieceType != currentPlayer)
+                ? true : false;
         }
 
 
-        private void ControlPieceMovement(int previous_piece_x, int previous_piece_y, int dest_piece_x, int dest_piece_y, int up_or_down)
+        private bool IsMoveLegal(int destinationX, int destinationY)
+        {
+            return ChessBoard.validMoves.Exists(item => item.x == destinationX && item.y == destinationY);
+        }
+
+
+        private void ManagePieceMovement(int previousX, int previousY, int destinationX, int destinationY, int backRank)
         {
             if (selectedPiece.pieceName == "P")
-                PawnPromotion(selectedPiece, dest_piece_x, dest_piece_y);
+                PawnPromotion(selectedPiece, destinationX, destinationY);
 
 
-            Button originalSquare = GetButtonAtPosition(previous_piece_x, previous_piece_y);
+            Button originalSquare = GetButtonAtPosition(previousX, previousY);
             originalSquare.BackgroundImage = null;
-            ChessBoard.Board[previous_piece_x, previous_piece_y] = null;
-            ChessBoard.Board[dest_piece_x, dest_piece_y] = new CPiece(dest_piece_x, dest_piece_y, 
+            ChessBoard.Board[previousX, previousY] = null;
+            ChessBoard.Board[destinationX, destinationY] = new CPiece(destinationX, destinationY, 
                                                                             selectedPiece.pieceName, 
                                                                                 selectedPiece.pieceType);
 
             if (selectedPiece.pieceName == "K" && !firstKingMove[turn])
-                FirstKingMove(dest_piece_x, dest_piece_y, up_or_down);
+                FirstKingMove(destinationX, destinationY, backRank);
 
             else if (selectedPiece.pieceName == "R")
-                FirstRookMove(selectedPiece, dest_piece_x, dest_piece_y, up_or_down);
+                FirstRookMove(selectedPiece, destinationX, destinationY, backRank);
 
-            ref CPiece movedPiece = ref ChessBoard.Board[dest_piece_x, dest_piece_y];
+            ref CPiece movedPiece = ref ChessBoard.Board[destinationX, destinationY];
 
-            movedPiece.x = dest_piece_x;
-            movedPiece.y = dest_piece_y;
+            movedPiece.x = destinationX;
+            movedPiece.y = destinationY;
         }
 
 
-        private bool MoveIsLegalWhenCheck(int x, int y)
+        private bool IsMoveLegalWhenCheck(int x, int y)
         {
             ChessBoard.copyMoves.Clear();
 
@@ -317,21 +325,21 @@ namespace WinFormsApp1
         }
 
 
-        private void ControlIfPieceHasGivenCheck(CPiece king, int dest_piece_x, int dest_piece_y)
+        private void ControlIfPieceHasGivenCheck(CPiece king, int destinationX, int destinationY)
         {
             ChessBoard.validMoves.Clear();
 
             if (selectedPiece.pieceName == "R")
-                DefineDirectionTowardsKing("Straight", king, dest_piece_x, dest_piece_y);
+                DefineDirectionTowardsKing("Straight", king, destinationX, destinationY);
 
             else if (selectedPiece.pieceName == "B")
-                DefineDirectionTowardsKing("Diagonal", king, dest_piece_x, dest_piece_y);
+                DefineDirectionTowardsKing("Diagonal", king, destinationX, destinationY);
 
             else if (selectedPiece.pieceName == "Q")
-                DefineDirectionTowardsKing("Straight", king, dest_piece_x, dest_piece_y);
+                DefineDirectionTowardsKing("Straight", king, destinationX, destinationY);
 
 
-            ChessBoard.validMoves.Add(new CSquare(dest_piece_x, dest_piece_y));  // piece that gives check can also be captured
+            ChessBoard.validMoves.Add(new CSquare(destinationX, destinationY));  // piece that gives check can also be captured
                                                                                  // to stop check (neccessary for Knight and Pawn)
 
             Debug.Write("\nvalidMoves = ");
@@ -653,38 +661,14 @@ namespace WinFormsApp1
 
 
         // create a method in ChessBoard.cs  'CalculateMoves(CPiece P, string direction)'
+
         private void AvaibleSquares(CPiece P)
         {
             ChessBoard.validMoves.Clear();
 
             switch (P.pieceName)
             {
-                case "P":
-                    ChessBoard.Pawns(P);
-                    break;
-
-                case "R":
-                    ChessBoard.Straight(P, 8, "");
-                    break;
-
-                case "N":
-                    ChessBoard.Jump(P);
-                    break;
-
-                case "B":
-                    ChessBoard.Diagonal(P, 8, "");
-                    break;
-
-                case "Q":
-                    ChessBoard.Straight(P, 8, "");
-                    ChessBoard.Diagonal(P, 8, "");
-                    break;
-
-                case "K":
-                    ChessBoard.Straight(P, 1, "");
-                    ChessBoard.Diagonal(P, 1, "");
-                    break;
-            }
+           }
         }
 
 
