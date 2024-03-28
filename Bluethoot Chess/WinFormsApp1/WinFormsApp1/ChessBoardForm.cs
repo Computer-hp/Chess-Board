@@ -112,97 +112,46 @@ namespace WinFormsApp1
 
 
 
-        // TODO error when giving check with pawn after capturing diagonally
+        // TODO error when giving check with pawn after capturing diagonally.
+
+        // Button_Click for any button, then create one method when user clicks a button with piece
+        // and one other method when user click a button after clicking a piece.
+
         private void Button_Click(object sender, EventArgs e)
         {
             Button clickedButton = (Button)sender;
             var position = (ValueTuple<int, int>)clickedButton.Tag;
 
-            int dest_piece_x = position.Item1;
-            int dest_piece_y = position.Item2;
+            int destinationX = position.Item1;
+            int destinationY = position.Item2;
+
 
             currentPlayer = (turn == 0) ? "white" : "black";
 
-            int up_or_down = (currentPlayer == "white") ? 0 : 7;
+            int backRank = (currentPlayer == "white") ? 0 : 7;
 
             UpOrDown = (currentPlayer == "white") ? 1 : -1;
 
-            if (ChessBoard.Board[dest_piece_x, dest_piece_y] == null || ChessBoard.Board[dest_piece_x, dest_piece_y].pieceType != currentPlayer)
-            {
-                if (!ChessBoard.validMoves.Exists(item => item.x == dest_piece_x && item.y == dest_piece_y))
-                    return;
 
-                if (selectedPiece == null)
-                    return;
+            if (selectedPiece == null && PieceGotClicked(destinationX, destinationY))
+                ManageSelectedPiece(destinationX, destinationY, backRank);
 
-                if (isCheck && !MoveIsLegalWhenCheck(dest_piece_x, dest_piece_y))
-                    return;
-
-                ControlPieceMovement(selectedPiece.x, selectedPiece.y, dest_piece_x, dest_piece_y, up_or_down);
+            else
+                ManageDestinationSquare(clickedButton, destinationX, destinationY, backRank);
+        }
 
 
-                if (!firstMove)
-                {
-                    firstMove = true;
-                    timer[1].Start();
-                }
-                else
-                {
-                    timer[turn + UpOrDown].Stop();
-                    timer[turn].Start();
-                }
-
-                CPiece king = FindKing(currentPlayer);
-
-                if (selectedPiece.pieceName != "K")
-                    ControlIfPieceHasGivenCheck(king, dest_piece_x, dest_piece_y);
-
-                clickedButton.BackgroundImage = SetImageToButton(ChessBoard.Board[dest_piece_x, dest_piece_y]);
-
-                try
-                {
-                    if (isCheck)
-                    {
-                        HandleSituationAfterCheck(king);
-
-                        if (!IsCheckmate())
-                            return;
-
-                        var popUp = new RestartForm();
-
-                        popUp.StartPosition = FormStartPosition.CenterParent;
-
-                        popUp.ShowDialog(this);
-
-                        if (RestartForm.NewGame)
-                            isRestarted = true;
-
-                        else if (RestartForm.MainMenu)
-                            this.Close();
-                    }
-
-                    return;
-                }
-                finally
-                {
-
-                    ChessBoard.validMoves.Clear();
-
-                    turn = (turn + 1) % 2;
-
-                    selectedPiece = null;
-                }
-            }
-
-            AvaibleSquares(ChessBoard.Board[dest_piece_x, dest_piece_y]);
-            selectedPiece = ChessBoard.Board[dest_piece_x, dest_piece_y];
+        private void ManageSelectedPiece(int destinationX, int destinationY, int backRank)
+        {
+            AvaibleSquares(ChessBoard.Board[destinationX, destinationY]);
+            selectedPiece = ChessBoard.Board[destinationX, destinationY];
 
             Debug.WriteLine($"{selectedPiece.pieceName}, {selectedPiece.pieceType}");
             Debug.WriteLine(ChessBoard.ToString() + "\n");
 
-            if (ChessBoard.Board[dest_piece_x, dest_piece_y].pieceName == "P")
+            if (ChessBoard.Board[destinationX, destinationY].pieceName == "P")
             { 
-                DiagonalMovementPawn(dest_piece_x + 1, dest_piece_y + UpOrDown);
+                DiagonalMovementPawn(destinationX + 1, destinationY + UpOrDown);
                 return;
             }
 
@@ -221,12 +170,93 @@ namespace WinFormsApp1
 
             // Check if  O-O  or  O-O-O  is possible.
             if (!O_O[turn])
-                CheckCastle(6, up_or_down, 5, ref O_O[turn], hRookFirstMove[turn]);
+                CheckCastle(6, backRank, 5, ref O_O[turn], hRookFirstMove[turn]);
 
             if (!O_O_O[turn])
-                CheckCastle(2, up_or_down, 3, ref O_O_O[turn], aRookFirstMove[turn]);
+                CheckCastle(2, backRank, 3, ref O_O_O[turn], aRookFirstMove[turn]);
         }
 
+
+        private bool PieceGotClicked(int destinationX, int destinationY)
+        {
+            return (ChessBoard.Board[destinationX, destinationY] != null) ? true : false;
+        }
+
+
+        private void ManageDestinationSquare(Button clickedButton, int destinationX, int destinationY, int backRank)
+        {
+            var destinationSquare = ChessBoard.Board[destinationX, destinationY];
+
+            if ((destinationSquare == null || destinationSquare.pieceType != currentPlayer) &&
+                (!IsDestinationSquareValid(destinationX, destinationY))
+)
+            {
+                if (isCheck && !MoveIsLegalWhenCheck(destinationX, destinationY))
+                    return;
+                    
+
+                ControlPieceMovement(selectedPiece.x, selectedPiece.y, destinationX, destinationY, backRank);
+
+
+                if (!firstMove)
+                {
+                    firstMove = true;
+                    timer[1].Start();
+                }                           
+                                            // control 'if else' later
+                else
+                {
+                    timer[turn + UpOrDown].Stop();
+                    timer[turn].Start();
+                }
+
+
+                CPiece king = FindKing(currentPlayer);
+
+                if (selectedPiece.pieceName != "K")
+                    ControlIfPieceHasGivenCheck(king, destinationX, destinationY);
+
+                clickedButton.BackgroundImage = SetImageToButton(ChessBoard.Board[destinationX, destinationY]);
+
+                try
+                {
+                    if (!isCheck)
+                        return;
+
+                        HandleSituationAfterCheck(king);
+
+                        if (!IsCheckmate())
+                            return;
+
+                        var popUp = new RestartForm();
+
+                        popUp.StartPosition = FormStartPosition.CenterParent;
+
+                        popUp.ShowDialog(this);
+
+                        if (RestartForm.NewGame)
+                            isRestarted = true;
+
+                        else if (RestartForm.MainMenu)
+                            this.Close();
+                }
+                finally
+                {
+
+                    ChessBoard.validMoves.Clear();
+
+                    turn = (turn + 1) % 2;
+
+                    selectedPiece = null;
+                }
+            }
+        }
+
+
+        private bool IsDestinationSquareValid(int destPieceX, int destPieceY)
+        {
+            return ChessBoard.validMoves.Exists(item => item.x == destPieceX && item.y == destPieceY);
+        }
 
 
         private void ControlPieceMovement(int previous_piece_x, int previous_piece_y, int dest_piece_x, int dest_piece_y, int up_or_down)
