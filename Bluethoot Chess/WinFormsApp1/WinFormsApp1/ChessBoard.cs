@@ -17,8 +17,6 @@ namespace WinFormsApp1
         private const int BOARD_SIZE = 8;
         private const int NUMBER_OF_DIRECTIONS = 8;
 
-        private int x, y, oppositeX, oppositeY;
-
         private CPiece[,] mBoard;
 
         public CPiece[,] Board { get { return mBoard; } set { mBoard = value; } }
@@ -31,11 +29,6 @@ namespace WinFormsApp1
 
         public Dictionary<Tuple<int, int>, List<CSquare>> stopCheckWithPiece { get; set; } = new();
 
-        private enum PieceTypeOfMovement
-        {
-            Rook = 0,
-            Bishop = 1
-        };
 
         private static readonly (string, CSquare)[] linearDirections =
         {
@@ -49,6 +42,12 @@ namespace WinFormsApp1
                 ( "LeftDown", new CSquare(-1, -1) ),
         };
 
+        private static readonly (int x, int y)[] knightMoves = 
+        {
+            (2, 1), (2, -1), (-2, 1), (-2, -1),
+            (1, 2), (1, -2), (-1, 2), (-1, -2)
+        };
+
 
 
         public CMatrixBoard()
@@ -56,7 +55,6 @@ namespace WinFormsApp1
             Board = new CPiece[BOARD_SIZE, BOARD_SIZE];
         }
 
-        
 
         /*
             Adds pieces to the board. 
@@ -77,35 +75,6 @@ namespace WinFormsApp1
         }
 
 
-
-        /*
-            Calculates the legal pawn moves. 
-        */
-
-        public void Pawns(CPiece P)
-        {
-            int squareUpOrDown = (P.pieceType == "white") ? 1 : -1;
-
-            bool firstMove = ((P.pieceType == "white" && P.y == 1) || 
-                              (P.pieceType == "black" && P.y == 6))
-                                ? true : false;
-
-            if (P.y + squareUpOrDown < 0 || P.y + squareUpOrDown >= BOARD_SIZE)
-                return;
-
-            if (Board[P.x, P.y + squareUpOrDown] == null)
-                validMoves.Add(new CSquare(P.x, P.y + squareUpOrDown));
-
-            if (firstMove && Board[P.x, P.y + (squareUpOrDown * 2)] == null)
-                validMoves.Add(new CSquare(P.x, P.y + (squareUpOrDown * 2)));
-
-            validMoves.Add(new CSquare(P.x + squareUpOrDown, P.y + squareUpOrDown));
-            validMoves.Add(new CSquare(P.x - squareUpOrDown, P.y + squareUpOrDown));
-
-            validMoves.RemoveAll(square => square.x < 0 || square.x >= BOARD_SIZE);
-        }
-
-        
         public void CalculateMoves(CPiece piece, string direction)
         {
             validMoves.Clear();
@@ -113,11 +82,11 @@ namespace WinFormsApp1
             switch (piece.pieceName)
             {
                 case "P":
-                    Pawns(piece);
+                    PawnMoves(piece);
                     return;
-                    
+
                 case "N":
-                    Jump(piece);
+                    KnightMoves(piece);
                     return;
             }
 
@@ -128,35 +97,62 @@ namespace WinFormsApp1
         }
 
 
-        public void ManageLinearDirections(CPiece piece, int times, int endingIndexForDirections, string direction)
+        /*
+            Calculates the legal pawn moves. 
+        */
+
+        private void PawnMoves(CPiece piece)
+        {
+            int squareUpOrDown = (piece.pieceType == "white") ? 1 : -1;
+
+            bool firstMove = ((piece.pieceType == "white" && piece.y == 1) ||
+                              (piece.pieceType == "black" && piece.y == 6))
+                                ? true : false;
+
+            if (piece.y + squareUpOrDown < 0 || piece.y + squareUpOrDown >= BOARD_SIZE)
+                return;
+
+            if (Board[piece.x, piece.y + squareUpOrDown] == null)
+                validMoves.Add(new CSquare(piece.x, piece.y + squareUpOrDown));
+
+            if (firstMove && Board[piece.x, piece.y + (squareUpOrDown * 2)] == null)
+                validMoves.Add(new CSquare(piece.x, piece.y + (squareUpOrDown * 2)));
+
+            validMoves.Add(new CSquare(piece.x + squareUpOrDown, piece.y + squareUpOrDown));
+            validMoves.Add(new CSquare(piece.x - squareUpOrDown, piece.y + squareUpOrDown));
+
+            validMoves.RemoveAll(square => square.x < 0 || square.x >= BOARD_SIZE);
+        }
+
+
+        // Some errors when moving diagonaly
+        private void ManageLinearDirections(CPiece piece, int times, int endingIndexForDirections, string direction)
         {
             if (!string.IsNullOrEmpty(direction))
             {
-                CalculateDirections(piece, linearDirections.First(storedDirection => storedDirection.Item1 == direction).Item2, times);
+                CalculateLinearDirections(piece, linearDirections.First(storedDirection => storedDirection.Item1 == direction).Item2, times);
                 return;
             }
 
             int startingIndexForDirections = (piece.pieceName == "R") ? 0 : (piece.pieceName == "B") ? 4 : 1;
 
-
-
             for (int i = startingIndexForDirections; i < endingIndexForDirections; i++)
-                CalculateDirections(piece, linearDirections[i].Item2, times);
+                CalculateLinearDirections(piece, linearDirections[i].Item2, times);
         }
 
 
-        public void CalculateDirections(CPiece P, CSquare incrementForNextSquare, int times)
+        private void CalculateLinearDirections(CPiece piece, CSquare incrementForNextSquare, int times)
         {
-            int destinationX = P.x, destinationY = P.y;
+            int destinationX = piece.x, destinationY = piece.y;
 
             for (int i = 0; i < times; i++)
             {
                 destinationX += incrementForNextSquare.x;
                 destinationY += incrementForNextSquare.y;
 
-                if (destinationX >= BOARD_SIZE || 
+                if (destinationX >= BOARD_SIZE ||
                     destinationY >= BOARD_SIZE ||
-                    destinationX < 0 || 
+                    destinationX < 0 ||
                     destinationY < 0)
 
                     return;
@@ -174,73 +170,17 @@ namespace WinFormsApp1
         }
 
 
-        public void Jump(CPiece P)
+        private void KnightMoves(CPiece piece)
         {
-            x = P.x; y = P.y;
-
-            int counterX = 2;
-            int counterY = 4;
-
-            for (int i = 0; i < 2; i++)
+            foreach (var move in knightMoves)
             {
-                int provisoryX = x + 1;
-                int provisoryY = y + 2;
+                int newX = piece.x + move.x;
+                int newY = piece.y + move.y;
 
-                oppositeX = provisoryX - counterX; 
-                oppositeY = provisoryY - counterY;
-
-                JumpRight(provisoryX, provisoryY);
-                JumpLeft(provisoryY);
-
-
-                x++;
-                y--;
-                counterY -= 2;
-                counterX += 2;
-            }
+                if (newX >= 0 && newX < BOARD_SIZE && newY >= 0 && newY < BOARD_SIZE)
+                    validMoves.Add(new CSquare(newX, newY));
+            }                
         }
-
-
-        private void JumpRight(int provisoryX, int provisoryY)
-        {
-            if (provisoryX >= BOARD_SIZE)
-                return;
-
-            if (provisoryY < BOARD_SIZE)
-                validMoves.Add(new CSquare(provisoryX, provisoryY));
-
-            if (oppositeY >= 0)
-                validMoves.Add(new CSquare(provisoryX, oppositeY));
-        }
-
-
-        private void JumpLeft(int provisoryY)
-        {
-            if (oppositeX < 0)
-                return;
-
-            if (provisoryY < BOARD_SIZE)
-                validMoves.Add(new CSquare(oppositeX, provisoryY));
-
-            if (oppositeY >= 0)
-                validMoves.Add(new CSquare(oppositeX, oppositeY));
-        }
-
-
-        public void CheckKnightMoves(CPiece P)
-        {
-            for (int x = 0; x < BOARD_SIZE; x++)
-            {
-                for (int y = 0; y < BOARD_SIZE; y++)
-                {
-                    if (Board[x, y] != null && Board[x, y].pieceType == P.pieceType)
-                        if (validMoves.Exists(item => item.x == x && item.y == y) == true)
-                            validMoves.RemoveAll(item => item.x == x && item.y == y);
-                }
-            }
-        }
-
-
 
 
         public override string ToString()

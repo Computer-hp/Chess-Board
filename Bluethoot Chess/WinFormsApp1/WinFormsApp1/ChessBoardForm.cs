@@ -143,8 +143,8 @@ namespace WinFormsApp1
 
         private void ManageSelectedPiece(int destinationX, int destinationY, int backRank)
         {
-            AvaibleSquares(ChessBoard.Board[destinationX, destinationY]);
             selectedPiece = ChessBoard.Board[destinationX, destinationY];
+            ChessBoard.CalculateMoves(selectedPiece, "");
 
 
             Debug.WriteLine($"{selectedPiece.pieceName}, {selectedPiece.pieceType}");
@@ -154,12 +154,6 @@ namespace WinFormsApp1
             if (selectedPiece.pieceName == "P")
             { 
                 DiagonalMovementPawn(destinationX + 1, destinationY + UpOrDown);
-                return;
-            }
-
-            else if (selectedPiece.pieceName == "N")
-            {
-                ChessBoard.CheckKnightMoves(selectedPiece);
                 return;
             }
             else if (selectedPiece.pieceName != "K")
@@ -379,7 +373,7 @@ namespace WinFormsApp1
 
                     continue;
                 
-                AvaibleSquares(piece);
+                ChessBoard.CalculateMoves(piece, "");
 
                 if (piece.pieceName == "P")
                     DiagonalMovementPawn(piece.x + 1, piece.y - UpOrDown);
@@ -389,7 +383,7 @@ namespace WinFormsApp1
                 StopCheck(piece);
             }
 
-            AvaibleSquares(king);
+            ChessBoard.CalculateMoves(king, "");
             SaveInvalidSquaresOfKing(king);
         }
 
@@ -403,6 +397,7 @@ namespace WinFormsApp1
         }
 
 
+        // TODO improve this method
         private void DefineDirectionTowardsKing(string moveTo, CPiece king, int x, int y)
         {
             ChessBoard.validMoves.Clear();
@@ -415,11 +410,11 @@ namespace WinFormsApp1
             switch (moveTo)
             {
                 case "Straight":
-                    ChessBoard.Straight(ChessBoard.Board[x, y], 8, direction);
+                    ChessBoard.CalculateMoves(ChessBoard.Board[x, y], direction);
                     break;
 
                 case "Diagonal":
-                    ChessBoard.Diagonal(ChessBoard.Board[x, y], 8, direction);
+                    ChessBoard.CalculateMoves(ChessBoard.Board[x, y], direction);
                     break;
             }
 
@@ -497,7 +492,7 @@ namespace WinFormsApp1
             {
                 if (piece != null && piece.pieceType != king.pieceType && piece.pieceName != king.pieceName)
                 {
-                    AvaibleSquares(piece);
+                    ChessBoard.CalculateMoves(piece, "");
 
                     if (piece.pieceName == "P")
                         ChessBoard.validMoves.RemoveAll(square => square.x == piece.x && square.y == piece.y + (-UpOrDown));
@@ -549,7 +544,7 @@ namespace WinFormsApp1
                     
                     continue;
                 
-                AvaibleSquares(piece);
+                ChessBoard.CalculateMoves(piece, "");
 
                 if (B.validMoves.Exists(square => square.x == pieceNearKing.x && square.y == pieceNearKing.y))
                 {
@@ -579,8 +574,6 @@ namespace WinFormsApp1
                 ChessBoard.stopCheckWithPiece[key] = tmpMoves;
             }
         }
-
-
 
 
 
@@ -629,7 +622,8 @@ namespace WinFormsApp1
                 hRookFirstMove[turn] = true;
         }
 
-
+        
+        // TODO improve this method
         private void DiagonalMovementPawn(int x, int y)
         {
             int oppositeX = x - 2;
@@ -657,18 +651,6 @@ namespace WinFormsApp1
 
                 Debug.WriteLine("Promotion: " + promotion.PieceName);
             }
-        }
-
-
-        // create a method in ChessBoard.cs  'CalculateMoves(CPiece P, string direction)'
-
-        private void AvaibleSquares(CPiece P)
-        {
-            ChessBoard.validMoves.Clear();
-
-            switch (P.pieceName)
-            {
-           }
         }
 
 
