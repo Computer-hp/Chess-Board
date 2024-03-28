@@ -34,7 +34,6 @@ namespace WinFormsApp1
         private int[] secondsElapsed = new int[2];
 
         private string currentPlayer = "";
-        private string direction = "";
 
         private static readonly string projectPath  = GetProjectPath();
 
@@ -111,37 +110,6 @@ namespace WinFormsApp1
         }
 
 
-
-        private bool MoveIsLegalWhenCheck(int x, int y)
-        {
-            ChessBoard.copyMoves.Clear();
-
-            Tuple<int, int> key = Tuple.Create(selectedPiece.x, selectedPiece.y);
-
-            if (selectedPiece.pieceName != "K" && ChessBoard.stopCheckWithPiece.ContainsKey(key))
-            {
-                List<CSquare> squareList = ChessBoard.stopCheckWithPiece[key];
-
-                if (squareList.Any(square => square.x == x && square.y == y))
-                    ChessBoard.copyMoves.AddRange(ChessBoard.stopCheckWithPiece[key]);
-            }
-            else if (selectedPiece.pieceName == "K")
-                ChessBoard.copyMoves.AddRange(ChessBoard.validMoves);
-
-            if (!ChessBoard.copyMoves.Exists(
-                    square => ChessBoard.validMoves.Exists(
-                    checkSquare => checkSquare.x == square.x && checkSquare.y == square.y)))
-
-                return false;
-
-            foreach (var entry in ChessBoard.stopCheckWithPiece)
-                entry.Value.Clear();
-
-            ChessBoard.stopCheckWithPiece.Clear();
-
-            isCheck = false;
-            return true;
-        }
 
 
         // TODO error when giving check with pawn after capturing diagonally
@@ -287,24 +255,54 @@ namespace WinFormsApp1
         }
 
 
+        private bool MoveIsLegalWhenCheck(int x, int y)
+        {
+            ChessBoard.copyMoves.Clear();
+
+            Tuple<int, int> key = Tuple.Create(selectedPiece.x, selectedPiece.y);
+
+            if (selectedPiece.pieceName != "K" && ChessBoard.stopCheckWithPiece.ContainsKey(key))
+            {
+                List<CSquare> squareList = ChessBoard.stopCheckWithPiece[key];
+
+                if (squareList.Any(square => square.x == x && square.y == y))
+                    ChessBoard.copyMoves.AddRange(ChessBoard.stopCheckWithPiece[key]);
+            }
+            else if (selectedPiece.pieceName == "K")
+                ChessBoard.copyMoves.AddRange(ChessBoard.validMoves);
+
+            if (!ChessBoard.copyMoves.Exists(
+                    square => ChessBoard.validMoves.Exists(
+                    checkSquare => checkSquare.x == square.x && checkSquare.y == square.y)))
+
+                return false;
+
+            foreach (var entry in ChessBoard.stopCheckWithPiece)
+                entry.Value.Clear();
+
+            ChessBoard.stopCheckWithPiece.Clear();
+
+            isCheck = false;
+            return true;
+        }
+
 
         private void ControlIfPieceHasGivenCheck(CPiece king, int dest_piece_x, int dest_piece_y)
         {
             ChessBoard.validMoves.Clear();
 
-            direction = "";
-
             if (selectedPiece.pieceName == "R")
-                DefineMethod("Straight", king, dest_piece_x, dest_piece_y);
+                DefineDirectionTowardsKing("Straight", king, dest_piece_x, dest_piece_y);
 
             else if (selectedPiece.pieceName == "B")
-                DefineMethod("Diagonal", king, dest_piece_x, dest_piece_y);
+                DefineDirectionTowardsKing("Diagonal", king, dest_piece_x, dest_piece_y);
 
             else if (selectedPiece.pieceName == "Q")
-                DefineMethod("Straight", king, dest_piece_x, dest_piece_y);
+                DefineDirectionTowardsKing("Straight", king, dest_piece_x, dest_piece_y);
 
-            // piece that gives check can also be captured to stop check, neccessary for Knight and Pawn
-            ChessBoard.validMoves.Add(new CSquare(dest_piece_x, dest_piece_y));
+
+            ChessBoard.validMoves.Add(new CSquare(dest_piece_x, dest_piece_y));  // piece that gives check can also be captured
+                                                                                 // to stop check (neccessary for Knight and Pawn)
 
             Debug.Write("\nvalidMoves = ");
 
@@ -313,14 +311,24 @@ namespace WinFormsApp1
 
             Debug.Write('\n');
 
-            IsCheck(king);
+
+            isCheck = IsCheck(king);
+            Debug.WriteLine("\ncheck = " + isCheck + '\n');
         }
 
+
+        private bool IsCheck(CPiece king)
+        {
+            if (ChessBoard.validMoves.Exists(move => move.x == king.x && move.y == king.y))
+                return true;
+            
+            return false;
+        }
 
 
         private void HandleSituationAfterCheck(CPiece king)
         {
-            Debug.WriteLine("CHECK");
+            Debug.WriteLine("CHECK\n");
 
             ChessBoard.copyMoves.Clear();
             ChessBoard.copyMoves.AddRange(ChessBoard.validMoves);
@@ -348,7 +356,6 @@ namespace WinFormsApp1
         }
 
 
-
         private bool IsCheckmate()
         {
             bool noValidMoves = !ChessBoard.validMoves.Any();
@@ -358,17 +365,12 @@ namespace WinFormsApp1
         }
 
 
-
-        private void DefineMethod(string moveTo, CPiece king, int x, int y)
+        private void DefineDirectionTowardsKing(string moveTo, CPiece king, int x, int y)
         {
-            direction = "";
-
             ChessBoard.validMoves.Clear();
 
-            if (moveTo == "Straight")
-                FindStraightDirection(king, x, y);
-            else
-                FindDiagonalDirection(king, x, y);
+            string direction = (moveTo == "Straight") ? FindStraightDirection(king, x, y) 
+                                                        : FindDiagonalDirection(king, x, y);
 
             Debug.Write($"\ndirection = {direction}\n");
 
@@ -384,9 +386,8 @@ namespace WinFormsApp1
             }
 
             if (selectedPiece.pieceName == "Q" && !isCheck && moveTo != "Diagonal")
-                DefineMethod("Diagonal", king, x, y);
+                DefineDirectionTowardsKing("Diagonal", king, x, y);
         }
-
 
 
         private void CheckCastle(int kingMoveX, int Y, int compareX, ref bool castle, bool firstRookMove)
@@ -406,66 +407,26 @@ namespace WinFormsApp1
         }
 
 
-
-        private void FindStraightDirection(CPiece king, int x, int y)
+        private string FindStraightDirection(CPiece king, int targetX, int targetY)
         {
-            if (y == king.y)
+            if (king == null || (targetX != king.x && targetY != king.y))  // no sure that works
+                return "";
 
-                if (x > king.x)
-                    direction = "Left";
-
-                else if (x < king.x)
-                    direction = "Right";
-
-
-            if (x == king.x)
-
-                if (y > king.y)
-                    direction = "Down";
-
-                else if (y < king.y)
-                    direction = "Up";
+            return
+                (targetY == king.y) ? ((targetX > king.x) ? "Left" : "Right")
+                                    : ((targetY > king.y) ? "Down" : "Up");
         }
 
 
-
-        private void FindDiagonalDirection(CPiece king, int x, int y)
+        private string FindDiagonalDirection(CPiece king, int targetX, int targetY)
         {
-            if (y > king.y)
+            if (king == null || targetX == king.x || targetY == king.y)
+                return "";
 
-                if (x > king.x)
-                    direction = "LeftDown";
-
-                else if (x < king.x)
-                    direction = "RightDown";
-
-
-            else if (y < king.y)
-
-                if (x < king.x)
-                    direction = "RightUp";
-
-                else if (x > king.x)
-                    direction = "LeftUp";
+            return
+                (targetY > king.y) ? ((targetX > king.x) ? "LeftDown" : "RightDown")
+                                   : ((targetX < king.x) ? "RightUp" : "LeftUp");
         }
-
-
-
-        // Find the button at the specified position
-        private Button GetButtonAtPosition(int x, int y)
-        {
-            foreach (var button in Controls.OfType<Button>())
-            {
-                var position = (ValueTuple<int, int>)button.Tag;
-
-                if (position.Item1 == x && position.Item2 == y)
-                {
-                    return button;
-                }
-            }
-            return null;
-        }
-
 
 
         private void RemoveInvalidMovesOfPiece(CPiece P)
@@ -562,18 +523,6 @@ namespace WinFormsApp1
 
 
 
-        private void IsCheck(CPiece king)
-        {
-            if (ChessBoard.validMoves.Exists(move => move.x == king.x && move.y == king.y))
-                isCheck = true;
-            else
-                isCheck = false;
-
-            Debug.WriteLine("\ncheck = " + isCheck + '\n');
-        }
-
-
-
         private void StopCheck(CPiece Piece)
         {
             List<CSquare> tmpMoves = new();
@@ -594,17 +543,6 @@ namespace WinFormsApp1
         }
 
 
-
-        private void FirstKingMove(int previusKingX, int previusKingY, int Y)
-        {
-            firstKingMove[turn] = true;
-
-            if (O_O[turn] && previusKingX == 6 && previusKingY == Y)
-                ShortAndLongCastle(7, Y);
-
-            else if (O_O_O[turn] && previusKingX == 2 && previusKingY == Y)
-                ShortAndLongCastle(0, Y);
-        }
 
 
 
@@ -632,6 +570,17 @@ namespace WinFormsApp1
         }
 
 
+        private void FirstKingMove(int previusKingX, int previusKingY, int Y)
+        {
+            firstKingMove[turn] = true;
+
+            if (O_O[turn] && previusKingX == 6 && previusKingY == Y)
+                ShortAndLongCastle(7, Y);
+
+            else if (O_O_O[turn] && previusKingX == 2 && previusKingY == Y)
+                ShortAndLongCastle(0, Y);
+        }
+
 
         private void FirstRookMove(CPiece selectedPiece, int x, int y, int Y)
         {
@@ -641,19 +590,6 @@ namespace WinFormsApp1
             if (selectedPiece.x == 7 && selectedPiece.y == Y)
                 hRookFirstMove[turn] = true;
         }
-
-
-
-        private CPiece FindKing(string currentPlayer)
-        {
-            foreach (var piece in ChessBoard.Board)
-            {
-                if (piece != null && piece.pieceType != currentPlayer && piece.pieceName == "K")
-                    return piece;
-            }
-            return null;
-        }
-
 
 
         private void DiagonalMovementPawn(int x, int y)
@@ -668,7 +604,6 @@ namespace WinFormsApp1
                 ChessBoard.validMoves.RemoveAll(square => square.x == oppositeX && square.y == y);
 
         }
-
 
 
         private void PawnPromotion(CPiece selectedPiece, int x, int y)
@@ -687,7 +622,7 @@ namespace WinFormsApp1
         }
 
 
-
+        // create a method in ChessBoard.cs  'CalculateMoves(CPiece P, string direction)'
         private void AvaibleSquares(CPiece P)
         {
             ChessBoard.validMoves.Clear();
@@ -720,6 +655,33 @@ namespace WinFormsApp1
                     ChessBoard.Diagonal(P, 1, "");
                     break;
             }
+        }
+
+
+        private CPiece FindKing(string currentPlayer)
+        {
+            foreach (var piece in ChessBoard.Board)
+            {
+                if (piece != null && piece.pieceType != currentPlayer && piece.pieceName == "K")
+                    return piece;
+            }
+            return null;
+        }
+
+
+        // Find the button at the specified position
+        private Button GetButtonAtPosition(int x, int y)
+        {
+            foreach (var button in Controls.OfType<Button>())
+            {
+                var position = (ValueTuple<int, int>)button.Tag;
+
+                if (position.Item1 == x && position.Item2 == y)
+                {
+                    return button;
+                }
+            }
+            return null;
         }
     }
 }
