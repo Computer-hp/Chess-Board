@@ -90,16 +90,15 @@ namespace WinFormsApp1
                     return;
             }
 
-            int times = (piece.pieceName == "K") ? 1 : BOARD_SIZE;
-            int endingIndexForDirections = (piece.pieceName == "B") ? NUMBER_OF_DIRECTIONS / 2 : NUMBER_OF_DIRECTIONS;
-
-            ManageLinearDirections(piece, times, endingIndexForDirections, direction);
+            ManageLinearDirections(piece, direction);
         }
 
 
         /*
             Calculates the legal pawn moves. 
         */
+
+        // pawn is able to move when check and go diagonally when it can't
 
         private void PawnMoves(CPiece piece)
         {
@@ -125,9 +124,10 @@ namespace WinFormsApp1
         }
 
 
-        // Some errors when moving diagonaly
-        private void ManageLinearDirections(CPiece piece, int times, int endingIndexForDirections, string direction)
+        private void ManageLinearDirections(CPiece piece, string direction)
         {
+            int times = (piece.pieceName == "K") ? 1 : BOARD_SIZE;
+
             if (!string.IsNullOrEmpty(direction))
             {
                 CalculateLinearDirections(piece, linearDirections.First(storedDirection => storedDirection.Item1 == direction).Item2, times);
@@ -135,6 +135,8 @@ namespace WinFormsApp1
             }
 
             int startingIndexForDirections = (piece.pieceName == "R") ? 0 : (piece.pieceName == "B") ? 4 : 1;
+            int endingIndexForDirections = (piece.pieceName == "R")
+                                            ? NUMBER_OF_DIRECTIONS / 2 : NUMBER_OF_DIRECTIONS;
 
             for (int i = startingIndexForDirections; i < endingIndexForDirections; i++)
                 CalculateLinearDirections(piece, linearDirections[i].Item2, times);
@@ -170,6 +172,7 @@ namespace WinFormsApp1
         }
 
 
+        // knight is able to move when check
         private void KnightMoves(CPiece piece)
         {
             foreach (var move in knightMoves)

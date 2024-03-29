@@ -114,9 +114,6 @@ namespace WinFormsApp1
 
         // TODO error when giving check with pawn after capturing diagonally.
 
-        // Button_Click for any button, then create one method when user clicks a button with piece
-        // and one other method when user click a button after clicking a piece.
-
         private void Button_Click(object sender, EventArgs e)
         {
             Button clickedButton = (Button)sender;
@@ -125,6 +122,8 @@ namespace WinFormsApp1
             int destinationX = position.Item1;
             int destinationY = position.Item2;
 
+            if (!PieceGotClicked(destinationX, destinationY) && selectedPiece == null)
+                return;
 
             currentPlayer = (turn == 0) ? "white" : "black";
 
@@ -132,8 +131,7 @@ namespace WinFormsApp1
 
             UpOrDown = (currentPlayer == "white") ? 1 : -1;
 
-
-            if (selectedPiece == null && PieceGotClicked(destinationX, destinationY))
+            if (selectedPiece == null)
                 ManageSelectedPiece(destinationX, destinationY, backRank);
 
             else
@@ -175,7 +173,7 @@ namespace WinFormsApp1
 
         private bool PieceGotClicked(int destinationX, int destinationY)
         {
-            return (ChessBoard.Board[destinationX, destinationY] != null) ? true : false;
+            return (ChessBoard.Board[destinationX, destinationY] != null);
         }
 
 
@@ -185,11 +183,16 @@ namespace WinFormsApp1
 
             if (!IsDestinationSquareValid(destinationSquare) ||
                 (!IsMoveLegal(destinationX, destinationY)))
-
+            {
+                selectedPiece = null;
                 return;
+            }
 
             if (isCheck && !IsMoveLegalWhenCheck(destinationX, destinationY))
+            {
+                selectedPiece = null;
                 return;
+            }
 
             ManagePieceMovement(selectedPiece.x, selectedPiece.y, destinationX, destinationY, backRank);
 
@@ -442,7 +445,7 @@ namespace WinFormsApp1
 
         private string FindStraightDirection(CPiece king, int targetX, int targetY)
         {
-            if (king == null || (targetX != king.x && targetY != king.y))  // no sure that works
+            if (king == null || (targetX != king.x && targetY != king.y))  // not sure that works
                 return "";
 
             return
