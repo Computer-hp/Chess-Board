@@ -32,15 +32,16 @@ namespace WinFormsApp1
 
         private static readonly (string, CSquare)[] linearDirections =
         {
-                ( "Up", new CSquare(0, 1) ),
-                ( "Down", new CSquare(0, -1) ),
-                ( "Right", new CSquare(1, 0) ),
-                ( "Left", new CSquare(-1, 0) ),
-                ( "RightUp", new CSquare(1, 1) ),
-                ( "RightDown", new CSquare(1, -1) ),
-                ( "LeftUp", new CSquare(-1, 1) ),
-                ( "LeftDown", new CSquare(-1, -1) ),
+            ( "Up", new CSquare(0, 1) ),
+            ( "Down", new CSquare(0, -1) ),
+            ( "Right", new CSquare(1, 0) ),
+            ( "Left", new CSquare(-1, 0) ),
+            ( "RightUp", new CSquare(1, 1) ),
+            ( "RightDown", new CSquare(1, -1) ),
+            ( "LeftUp", new CSquare(-1, 1) ),
+            ( "LeftDown", new CSquare(-1, -1) )
         };
+
 
         private static readonly (int x, int y)[] knightMoves = 
         {
@@ -66,11 +67,11 @@ namespace WinFormsApp1
 
             for (int x = 0; x < 8; x++)
             {
-                Board[x, 1] = new CPiece(x, 1, "P", "white");
-                Board[x, 0] = new CPiece(x, 0, pieces[x], "white");
+                Board[x, 1] = new CPiece(x, 1, "P", PieceColor.White);
+                Board[x, 0] = new CPiece(x, 0, pieces[x], PieceColor.White);
 
-                Board[x, 6] = new CPiece(x, 6, "P", "black");
-                Board[x, 7] = new CPiece(x, 7, pieces[x], "black");
+                Board[x, 6] = new CPiece(x, 6, "P", PieceColor.Black);
+                Board[x, 7] = new CPiece(x, 7, pieces[x], PieceColor.Black);
             }
         }
 
@@ -102,23 +103,23 @@ namespace WinFormsApp1
 
         private void PawnMoves(CPiece piece)
         {
-            int squareUpOrDown = (piece.pieceType == "white") ? 1 : -1;
+            int movePawnTowardsBlackOrWhite = ChessBoardForm.MoveTowardsBlackOrWhite;
 
-            bool firstMove = ((piece.pieceType == "white" && piece.y == 1) ||
-                              (piece.pieceType == "black" && piece.y == 6))
+            bool firstMove = ((piece.pieceType == PieceColor.White && piece.y == 1) ||
+                              (piece.pieceType == PieceColor.Black && piece.y == 6))
                                 ? true : false;
 
-            if (piece.y + squareUpOrDown < 0 || piece.y + squareUpOrDown >= BOARD_SIZE)
+            if (piece.y + movePawnTowardsBlackOrWhite < 0 || piece.y + movePawnTowardsBlackOrWhite >= BOARD_SIZE)
                 return;
 
-            if (Board[piece.x, piece.y + squareUpOrDown] == null)
-                validMoves.Add(new CSquare(piece.x, piece.y + squareUpOrDown));
+            if (Board[piece.x, piece.y + movePawnTowardsBlackOrWhite] == null)
+                validMoves.Add(new CSquare(piece.x, piece.y + movePawnTowardsBlackOrWhite));
 
-            if (firstMove && Board[piece.x, piece.y + (squareUpOrDown * 2)] == null)
-                validMoves.Add(new CSquare(piece.x, piece.y + (squareUpOrDown * 2)));
+            if (firstMove && Board[piece.x, piece.y + (movePawnTowardsBlackOrWhite * 2)] == null)
+                validMoves.Add(new CSquare(piece.x, piece.y + (movePawnTowardsBlackOrWhite * 2)));
 
-            validMoves.Add(new CSquare(piece.x + squareUpOrDown, piece.y + squareUpOrDown));
-            validMoves.Add(new CSquare(piece.x - squareUpOrDown, piece.y + squareUpOrDown));
+            validMoves.Add(new CSquare(piece.x + movePawnTowardsBlackOrWhite, piece.y + movePawnTowardsBlackOrWhite));
+            validMoves.Add(new CSquare(piece.x - movePawnTowardsBlackOrWhite, piece.y + movePawnTowardsBlackOrWhite));
 
             validMoves.RemoveAll(square => square.x < 0 || square.x >= BOARD_SIZE);
         }

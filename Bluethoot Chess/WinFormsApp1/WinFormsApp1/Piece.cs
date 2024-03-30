@@ -12,9 +12,9 @@ namespace WinFormsApp1
         public int y { get; set; }
 
         public string pieceName { get; set; }
-        public string pieceType { get; set; }
+        public PieceColor pieceType { get; set; }
 
-        public CPiece(int x, int y, string pieceName, string pieceType)
+        public CPiece(int x, int y, string pieceName, PieceColor pieceType)
         {
             this.x = x;
             this.y = y;

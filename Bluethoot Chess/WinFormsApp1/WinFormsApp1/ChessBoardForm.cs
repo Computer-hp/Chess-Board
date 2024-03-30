@@ -22,20 +22,25 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace WinFormsApp1
 {
+    public enum PieceColor
+    {
+        White,
+        Black
+    };
+
+
     public partial class ChessBoardForm : Form
     {
         private const int boardSize = 8;
-        
+
         public const int squareSize = 70;
 
         private int turn = 0;       // 0 for white, 1 for black
-        private int UpOrDown = 1;
+        public static int MoveTowardsBlackOrWhite { get; private set; } = 1;
 
         private int[] secondsElapsed = new int[2];
 
-        private string currentPlayer = "";
-
-        private static readonly string projectPath  = GetProjectPath();
+        private static readonly string projectPath = GetProjectPath();  // pathToImages
 
         private bool firstMove = false;
 
@@ -58,6 +63,7 @@ namespace WinFormsApp1
 
         private Timer[] timer = new Timer[2];
 
+        private PieceColor[] currentPlayer = { PieceColor.White, PieceColor.Black };
 
 
         public ChessBoardForm()
@@ -101,7 +107,7 @@ namespace WinFormsApp1
 
         public static Bitmap SetImageToButton(CPiece P)
         {
-            string DIR = P.pieceType;
+            string DIR = P.pieceType.ToString().ToLower();
 
             string imagePath = DIR + "\\" + P.pieceName + ".png";
 
@@ -125,11 +131,11 @@ namespace WinFormsApp1
             if (!PieceGotClicked(destinationX, destinationY) && selectedPiece == null)
                 return;
 
-            currentPlayer = (turn == 0) ? "white" : "black";
+            int backRank = (int)currentPlayer[turn] * 7;
 
-            int backRank = (currentPlayer == "white") ? 0 : 7;
+            MoveTowardsBlackOrWhite = -(turn * 2 - 1);
 
-            UpOrDown = (currentPlayer == "white") ? 1 : -1;
+            Debug.Write($"\nMoveTowardsBlackOrWhite = {MoveTowardsBlackOrWhite}\n");
 
             if (selectedPiece == null)
                 ManageSelectedPiece(destinationX, destinationY, backRank);
@@ -151,7 +157,7 @@ namespace WinFormsApp1
 
             if (selectedPiece.pieceName == "P")
             { 
-                DiagonalMovementPawn(destinationX + 1, destinationY + UpOrDown);
+                DiagonalMovementPawn(destinationX + 1, destinationY + MoveTowardsBlackOrWhite);
                 return;
             }
             else if (selectedPiece.pieceName != "K")
@@ -206,11 +212,11 @@ namespace WinFormsApp1
                                         //   that wait for each other
             else
             {
-                timer[turn + UpOrDown].Stop();
+                timer[turn + MoveTowardsBlackOrWhite].Stop();
                 timer[turn].Start();
             }
 
-            CPiece king = FindKing(currentPlayer);
+            CPiece king = FindKing();
 
             if (selectedPiece.pieceName != "K")
                 ControlIfPieceHasGivenCheck(king, destinationX, destinationY);
@@ -253,7 +259,7 @@ namespace WinFormsApp1
 
         private bool IsDestinationSquareValid(CPiece destinationSquare)
         {
-            return (destinationSquare == null || destinationSquare.pieceType != currentPlayer)
+            return (destinationSquare == null || destinationSquare.pieceType != currentPlayer[turn])
                 ? true : false;
         }
 
@@ -379,7 +385,7 @@ namespace WinFormsApp1
                 ChessBoard.CalculateMoves(piece, "");
 
                 if (piece.pieceName == "P")
-                    DiagonalMovementPawn(piece.x + 1, piece.y - UpOrDown);
+                    DiagonalMovementPawn(piece.x + 1, piece.y - MoveTowardsBlackOrWhite);
 
                 ChessBoard.validMoves.RemoveAll(move => move.x == king.x && move.y == king.y);
 
@@ -498,7 +504,7 @@ namespace WinFormsApp1
                     ChessBoard.CalculateMoves(piece, "");
 
                     if (piece.pieceName == "P")
-                        ChessBoard.validMoves.RemoveAll(square => square.x == piece.x && square.y == piece.y + (-UpOrDown));
+                        ChessBoard.validMoves.RemoveAll(square => square.x == piece.x && square.y == piece.y + (-MoveTowardsBlackOrWhite));
 
                     ChessBoard.invalidSquaresKing.RemoveAll(square => ChessBoard.validMoves.Exists(move => move.x == square.x && move.y == square.y));
                 }
@@ -643,8 +649,8 @@ namespace WinFormsApp1
 
         private void PawnPromotion(CPiece selectedPiece, int x, int y)
         {
-            if (selectedPiece.y + 1 == 7 && selectedPiece.pieceType == "white" ||
-                selectedPiece.y - 1 == 0 && selectedPiece.pieceType == "black")
+            if (selectedPiece.y + 1 == 7 && selectedPiece.pieceType == PieceColor.White ||
+                selectedPiece.y - 1 == 0 && selectedPiece.pieceType == PieceColor.Black)
             {
 
                 var promotion = new PromotionForm(turn);
@@ -657,15 +663,16 @@ namespace WinFormsApp1
         }
 
 
-        private CPiece FindKing(string currentPlayer)
+        private CPiece FindKing()
         {
             foreach (var piece in ChessBoard.Board)
             {
-                if (piece != null && piece.pieceType != currentPlayer && piece.pieceName == "K")
+                if (piece != null && piece.pieceType != currentPlayer[turn] && piece.pieceName == "K")
                     return piece;
             }
             return null;
         }
+
 
 
         // Find the button at the specified position
