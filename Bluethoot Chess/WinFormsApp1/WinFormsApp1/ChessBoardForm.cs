@@ -63,6 +63,7 @@ namespace WinFormsApp1
 
         public const int SQUARE_SIZE = 70;
 
+
         private int turn = 0;       // 0 for white, 1 for black
         public static int MoveTowardsBlackOrWhite { get; private set; } = 1;
 
@@ -91,7 +92,7 @@ namespace WinFormsApp1
 
         private Timer[] timer = new Timer[2];
 
-        private PieceColor[] currentPlayer = { PieceColor.White, PieceColor.Black };
+        private static readonly PieceColor[] currentPlayer = { PieceColor.White, PieceColor.Black };
 
 
         public ChessBoardForm()
@@ -199,18 +200,20 @@ namespace WinFormsApp1
             }
             else if (selectedPiece.pieceName != "K")
             {
-                RemoveInvalidMovesOfPiece(selectedPiece);
+                RemoveInvalidPieceMoves(selectedPiece);
                 return;
             }
 
             SaveInvalidSquaresOfKing(selectedPiece);
 
             // Check if  O-O  or  O-O-O  is possible.
-            if (!O_O[turn])
-                CheckCastle(6, backRank, 5, ref O_O[turn], hRookFirstMove[turn]);
-
             if (!O_O_O[turn])
-                CheckCastle(2, backRank, 3, ref O_O_O[turn], aRookFirstMove[turn]);
+                O_O_O[turn] = CheckCastle((int)Files.SecondFile, (int)Files.FifthFile, 
+                                          backRank, aRookFirstMove[turn]);
+            
+            if (!O_O[turn])
+                O_O[turn] = CheckCastle((int)Files.SixthFile, (int)Files.EighthFile, 
+                                        backRank, hRookFirstMove[turn]);
         }
 
 
@@ -465,20 +468,30 @@ namespace WinFormsApp1
         }
 
 
-        private void CheckCastle(int kingMoveX, int Y, int compareX, ref bool castle, bool firstRookMove)
+        private bool CheckCastle(int startingFile, int endingFile, int backRank, bool firstRookMove)
         {
-            if (compareX == 3 && ChessBoard.Board[2, Y] != null)
-                return;
+            if (firstKingMove[turn] || firstRookMove)
+                return false;
 
-            if (!firstKingMove[turn] && !firstRookMove &&
-                ChessBoard.IsSquareNull(kingMoveX, Y) && ChessBoard.validMoves.Exists(item => item.x == compareX && item.y == Y))
-            {
-                ChessBoard.validMoves.Add(new CSquare(kingMoveX, Y));
-                castle = true;
-                return;
-            }
+            int destinationKingX = startingFile;
 
-            castle = false;
+            for (; startingFile < endingFile; startingFile++)
+                if (!ChessBoard.IsSquareNull(startingFile, backRank))
+                    return false;
+
+            // TODO check if the squares in between the
+            //      O_O or O_O_O happens are accessible
+
+            /*
+
+             ... 
+
+            */
+
+
+            ChessBoard.validMoves.Add(new CSquare(startingFile + 1, backRank));
+
+            return false;
         }
 
 
@@ -504,7 +517,7 @@ namespace WinFormsApp1
         }
 
 
-        private void RemoveInvalidMovesOfPiece(CPiece P)
+        private void RemoveInvalidPieceMoves(CPiece P)
         {
             List<CSquare> tmp_list = new();
             tmp_list.AddRange(ChessBoard.validMoves);
@@ -524,6 +537,8 @@ namespace WinFormsApp1
 
 
         // Calculates the squares of every piece and compares with validMoves, if there are == moves, saves them in InvalidSquares
+
+        // TODO fix this method
         private void SaveInvalidSquaresOfKing(CPiece king)
         {
             ChessBoard.invalidSquaresKing.Clear();
@@ -531,16 +546,22 @@ namespace WinFormsApp1
             ChessBoard.invalidSquaresKing.AddRange(ChessBoard.validMoves);
 
             foreach (var piece in ChessBoard.Board)
+            {
+                if (piece == null || 
+                    piece.pieceType == king.pieceType ||
+                    piece.pieceName == king.pieceName)
 
-                if (piece != null && piece.pieceType != king.pieceType && piece.pieceName != king.pieceName)
-                {
-                    ChessBoard.CalculateMoves(piece, "");
+                    continue;
 
-                    if (piece.pieceName == "P")
-                        ChessBoard.validMoves.RemoveAll(square => square.x == piece.x && square.y == piece.y + (-MoveTowardsBlackOrWhite));
 
-                    ChessBoard.invalidSquaresKing.RemoveAll(square => ChessBoard.validMoves.Exists(move => move.x == square.x && move.y == square.y));
-                }
+                ChessBoard.CalculateMoves(piece, "");
+
+                if (piece.pieceName == "P")
+                    ChessBoard.validMoves.RemoveAll(square => square.x == piece.x && 
+                                                    square.y == piece.y + (-MoveTowardsBlackOrWhite));
+
+                ChessBoard.invalidSquaresKing.RemoveAll(square => ChessBoard.validMoves.Exists(move => move.x == square.x && move.y == square.y));
+            }
 
             CheckPieceNearKing(king);
 

@@ -67,11 +67,11 @@ namespace WinFormsApp1
 
             for (int x = 0; x < 8; x++)
             {
-                Board[x, 1] = new CPiece(x, 1, "P", PieceColor.White);
-                Board[x, 0] = new CPiece(x, 0, pieces[x], PieceColor.White);
+                Board[x, 1] = new CPiece(x, (int)Ranks.SecondRank, "P", PieceColor.White);
+                Board[x, 0] = new CPiece(x, (int)Ranks.FirstRank, pieces[x], PieceColor.White);
 
-                Board[x, 6] = new CPiece(x, 6, "P", PieceColor.Black);
-                Board[x, 7] = new CPiece(x, 7, pieces[x], PieceColor.Black);
+                Board[x, 6] = new CPiece(x, (int)Ranks.SeventhRank, "P", PieceColor.Black);
+                Board[x, 7] = new CPiece(x, (int)Ranks.EighthRank, pieces[x], PieceColor.Black);
             }
         }
 
@@ -162,11 +162,7 @@ namespace WinFormsApp1
                 destinationX += incrementForNextSquare.x;
                 destinationY += incrementForNextSquare.y;
 
-                if (destinationX >= BOARD_SIZE ||
-                    destinationY >= BOARD_SIZE ||
-                    destinationX < 0 ||
-                    destinationY < 0)
-
+                if (IsSquareOutsideTheBoard(destinationX, destinationY))
                     return;
 
                 if (!IsSquareNull(destinationX, destinationY))
@@ -188,18 +184,19 @@ namespace WinFormsApp1
                 int newX = piece.x + move.x;
                 int newY = piece.y + move.y;
 
-                if (newX >= 0 && newX < BOARD_SIZE && newY >= 0 && newY < BOARD_SIZE)
+                if (!IsSquareOutsideTheBoard(newX, newY))
                     validMoves.Add(new CSquare(newX, newY));
             }                
         }
+
 
 
         public bool IsSquareNull(int destinationX, int destinationY)
         {
             return (!IsSquareOutsideTheBoard(destinationX, destinationY))
 
-                    ? (Board[destinationX, destinationY] == null)
-                    : throw new Exception("\nThrown an exception due to incorrect coordinates\n");
+                ? (Board[destinationX, destinationY] == null)
+                : throw new Exception("\nThrown an exception due to incorrect coordinates\n");
         }
 
 
@@ -208,6 +205,7 @@ namespace WinFormsApp1
             return (destinationX < 0 || destinationX >= BOARD_SIZE ||
                     destinationY < 0 || destinationY >= BOARD_SIZE);
         }
+
 
 
         public override string ToString()
