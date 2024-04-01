@@ -28,7 +28,7 @@
         /// </summary>
 
         private int centerX, centerY;
-        private int chessBoardFormSize = boardSize * squareSize;
+        private int chessBoardFormSize = BOARD_SIZE * SQUARE_SIZE;
 
 
 
@@ -48,24 +48,23 @@
             ResumeLayout(false);
             StartPosition = FormStartPosition.CenterScreen;
 
-            centerX = (ClientSize.Width - boardSize * squareSize) / 2 - 70;
-            centerY = (ClientSize.Height - boardSize * squareSize) / 2;
+            centerX = (ClientSize.Width - BOARD_SIZE * SQUARE_SIZE) / 2 - 70;
+            centerY = (ClientSize.Height - BOARD_SIZE * SQUARE_SIZE) / 2;
         }
 
 
 
         private void InitializeChessBoardFormButtons()
         {
-            int x = 0, y = boardSize - 1;
+            int x = 0, y = BOARD_SIZE - 1;
 
-            for (int row = 0; row < boardSize; row++)
-            {
-                for (int col = 0; col < boardSize; col++)
+            for (int row = 0; row < BOARD_SIZE; row++)
+                for (int col = 0; col < BOARD_SIZE; col++)
                 {
                     Button square = new()
                     {
-                        Size = new Size(squareSize, squareSize),
-                        Location = new Point(centerX + col * squareSize, centerY + row * squareSize),
+                        Size = new Size(SQUARE_SIZE, SQUARE_SIZE),
+                        Location = new Point(centerX + col * SQUARE_SIZE, centerY + row * SQUARE_SIZE),
                         BackColor = (row + col) % 2 == 0 ? Color.Ivory : Color.Brown,
                         FlatStyle = FlatStyle.Flat,
                         FlatAppearance = { BorderSize = 0 },
@@ -85,7 +84,7 @@
 
                     Controls.Add(square);
 
-                    if (x < boardSize - 1)
+                    if (x < BOARD_SIZE - 1)
                         x++;
 
                     else
@@ -94,7 +93,6 @@
                         y--;
                     }
                 }
-            }
         }
 
 
@@ -105,7 +103,7 @@
             {
                 Text = "White: 00:00",
                 Font = new Font("Arial", 18),
-                Location = new Point(centerX + boardSize * squareSize + 10, ClientSize.Height - squareSize / 2 - 10),
+                Location = new Point(centerX + BOARD_SIZE * SQUARE_SIZE + 10, ClientSize.Height - SQUARE_SIZE / 2 - 10),
                 AutoSize = true
             };
 
@@ -113,7 +111,7 @@
             {
                 Text = "Black: 00:00",
                 Font = new Font("Arial", 18),
-                Location = new Point(centerX + boardSize * squareSize + 10, centerY),
+                Location = new Point(centerX + BOARD_SIZE * SQUARE_SIZE + 10, centerY),
                 AutoSize = true
             };
 

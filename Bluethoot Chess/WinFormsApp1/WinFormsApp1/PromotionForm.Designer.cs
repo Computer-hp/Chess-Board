@@ -48,7 +48,7 @@
 
 
 
-        private void InitializePromotionForm(string pieceTypeDir, string buttonName, int counter)
+        private void InitializePromotionForm(PieceColor pieceTypeDir, string buttonName, int counter)
         {
             int formWidth = this.ClientSize.Width;
             int formHeight = this.ClientSize.Height;
@@ -57,9 +57,9 @@
 
             Button button = new()
             {
-                Width = buttonWidth,
-                Height = buttonHeight,
-                Left = (formWidth - buttonWidth) / 2,
+                Width = BUTTON_WIDTH,
+                Height = BUTTON_HEIGHT,
+                Left = (formWidth - BUTTON_WIDTH) / 2,
                 Top = counter,
                 Name = buttonName,
                 BackColor = Color.Ivory,

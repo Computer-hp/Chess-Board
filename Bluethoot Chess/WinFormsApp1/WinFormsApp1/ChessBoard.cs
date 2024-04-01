@@ -99,24 +99,33 @@ namespace WinFormsApp1
             Calculates the legal pawn moves. 
         */
 
-        // pawn is able to move when check and go diagonally when it can't
+        // TODO   En passant
 
         private void PawnMoves(CPiece piece)
         {
             int movePawnTowardsBlackOrWhite = ChessBoardForm.MoveTowardsBlackOrWhite;
 
-            bool firstMove = ((piece.pieceType == PieceColor.White && piece.y == 1) ||
-                              (piece.pieceType == PieceColor.Black && piece.y == 6))
-                                ? true : false;
+            if (piece.y + movePawnTowardsBlackOrWhite < 0 || 
+                piece.y + movePawnTowardsBlackOrWhite >= BOARD_SIZE)
 
-            if (piece.y + movePawnTowardsBlackOrWhite < 0 || piece.y + movePawnTowardsBlackOrWhite >= BOARD_SIZE)
                 return;
 
-            if (Board[piece.x, piece.y + movePawnTowardsBlackOrWhite] == null)
+            Debug.WriteLine($"\nFirst Rank = {(int)Ranks.FirstRank}\n");
+
+            bool firstMoveIsValid = ((piece.pieceType == PieceColor.White && piece.y == (int)Ranks.FirstRank) ||
+                              (piece.pieceType == PieceColor.Black && piece.y == (int)Ranks.SeventhRank))
+                                ? true : false;
+
+            if (IsSquareNull(piece.x, piece.y + movePawnTowardsBlackOrWhite))
+
                 validMoves.Add(new CSquare(piece.x, piece.y + movePawnTowardsBlackOrWhite));
 
-            if (firstMove && Board[piece.x, piece.y + (movePawnTowardsBlackOrWhite * 2)] == null)
+
+            if (firstMoveIsValid && 
+                IsSquareNull(piece.x, piece.y + (movePawnTowardsBlackOrWhite * 2)))
+
                 validMoves.Add(new CSquare(piece.x, piece.y + (movePawnTowardsBlackOrWhite * 2)));
+
 
             validMoves.Add(new CSquare(piece.x + movePawnTowardsBlackOrWhite, piece.y + movePawnTowardsBlackOrWhite));
             validMoves.Add(new CSquare(piece.x - movePawnTowardsBlackOrWhite, piece.y + movePawnTowardsBlackOrWhite));
@@ -160,9 +169,7 @@ namespace WinFormsApp1
 
                     return;
 
-                CPiece? tmpPiece = Board[destinationX, destinationY];
-
-                if (tmpPiece != null)
+                if (!IsSquareNull(destinationX, destinationY))
                 {
                     validMoves.Add(new CSquare(destinationX, destinationY));
                     return;
@@ -184,6 +191,22 @@ namespace WinFormsApp1
                 if (newX >= 0 && newX < BOARD_SIZE && newY >= 0 && newY < BOARD_SIZE)
                     validMoves.Add(new CSquare(newX, newY));
             }                
+        }
+
+
+        public bool IsSquareNull(int destinationX, int destinationY)
+        {
+            return (!IsSquareOutsideTheBoard(destinationX, destinationY))
+
+                    ? (Board[destinationX, destinationY] == null)
+                    : throw new Exception("\nThrown an exception due to incorrect coordinates\n");
+        }
+
+
+        public bool IsSquareOutsideTheBoard(int destinationX, int destinationY)
+        {
+            return (destinationX < 0 || destinationX >= BOARD_SIZE ||
+                    destinationY < 0 || destinationY >= BOARD_SIZE);
         }
 
 

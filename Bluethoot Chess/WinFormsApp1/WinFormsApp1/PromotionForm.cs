@@ -14,7 +14,8 @@ namespace WinFormsApp1
     {
         public string PieceName { get; set; }
 
-        private const int buttonWidth = ChessBoardForm.squareSize, buttonHeight = ChessBoardForm.squareSize;
+        private const int BUTTON_WIDTH = ChessBoardForm.SQUARE_SIZE;
+        private const int BUTTON_HEIGHT = ChessBoardForm.SQUARE_SIZE;
 
         private readonly List<string> promotionPiecesName = new() { "Q", "R", "B", "N" };
 
@@ -23,14 +24,14 @@ namespace WinFormsApp1
         {
             InitializeComponent();
 
-            string pieceTypeDir = (turn == 0) ? "white" : "black";
+            PieceColor pieceTypeDir = (turn == 0) ? PieceColor.White : PieceColor.Black;
 
             int counter = 0;
 
             foreach (var buttonName in promotionPiecesName)
             {
                 InitializePromotionForm(pieceTypeDir, buttonName, counter);
-                counter += buttonHeight;
+                counter += BUTTON_HEIGHT;
             }
         }
 
