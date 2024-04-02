@@ -25,7 +25,6 @@ namespace WinFormsApp1
 
         public List<CSquare> copyMoves { get; set; } = new();
 
-        public List<CSquare> invalidSquaresKing { get; set; } = new();
 
         public Dictionary<Tuple<int, int>, List<CSquare>> stopCheckWithPiece { get; set; } = new();
 
