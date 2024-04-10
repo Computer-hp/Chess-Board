@@ -23,40 +23,6 @@ using System.Transactions;
 
 namespace WinFormsApp1
 {
-    public enum PieceColor
-    {
-        White,
-        Black
-    };
-
-
-    public enum Ranks
-    {
-        FirstRank,
-        SecondRank,
-        ThirdRank,
-        FourthRank,
-        FifthRank,
-        SixthRank,
-        SeventhRank,
-        EighthRank
-    };
-
-    
-    public enum Files
-    {
-        FirstFile,
-        SecondFile,
-        ThirdFile,
-        FourthFile,
-        FifthFile,
-        SixthFile,
-        SeventhFile,
-        EighthFile
-    };
-
-
-
     public partial class ChessBoardForm : Form
     {
         private const int BOARD_SIZE = 8;
@@ -93,6 +59,7 @@ namespace WinFormsApp1
         private Timer[] timer = new Timer[2];
 
         private static readonly PieceColor[] currentPlayer = { PieceColor.White, PieceColor.Black };
+
 
 
         public ChessBoardForm()
@@ -164,9 +131,7 @@ namespace WinFormsApp1
 
             var clickedSquare = ChessBoard.Board[destinationX, destinationY];
 
-            if (!PieceGotClicked(clickedSquare) && 
-                selectedPiece == null)
-
+            if (!PieceGotClicked(clickedSquare) && selectedPiece == null)
                 return;
 
             int backRank = (int)currentPlayer[turn] * (int)Ranks.EighthRank;
@@ -174,6 +139,7 @@ namespace WinFormsApp1
             MoveTowardsBlackOrWhite = -1 * (turn * 2 - 1);
 
             Debug.Write($"\nMoveTowardsBlackOrWhite = {MoveTowardsBlackOrWhite}\n");
+
 
             if (selectedPiece == null)
                 ManageSelectedPiece(destinationX, destinationY, backRank);
@@ -188,21 +154,14 @@ namespace WinFormsApp1
             selectedPiece = ChessBoard.Board[destinationX, destinationY];
             ChessBoard.CalculateMoves(selectedPiece, "");
 
-
             Debug.WriteLine($"{selectedPiece.pieceName}, {selectedPiece.pieceType}");
             Debug.WriteLine(ChessBoard.ToString() + "\n");
 
 
-            if (selectedPiece.pieceName == "P")
-            { 
-                ManageInvalidDiagonalPawnMoves(selectedPiece);
-                return;
-            }
-            else if (selectedPiece.pieceName != "K")
-            {
-                RemoveInvalidPieceMoves(selectedPiece);
-                return;
-            }
+            if (selectedPiece.pieceName == "P") { ManageInvalidDiagonalPawnMoves(selectedPiece); return; }
+
+            else if (selectedPiece.pieceName != "K") { RemoveInvalidPieceMoves(selectedPiece); return; }
+
 
             RemoveInvalidSquaresOfKing(selectedPiece);
 
@@ -229,34 +188,25 @@ namespace WinFormsApp1
 
         private void ManageDestinationSquare(Button clickedButton, int destinationX, int destinationY, int backRank)
         {
-            if (!IsMoveLegal(destinationX, destinationY))
-            {
-                selectedPiece = null;
-                return;
-            }
+            if (!IsMoveLegal(destinationX, destinationY)) { selectedPiece = null; return; }
 
-            if (isCheck && !IsMoveLegalWhenCheck(destinationX, destinationY))
-            {
-                selectedPiece = null;
-                return;
-            }
+            if (isCheck && !IsMoveLegalWhenCheck(destinationX, destinationY)) { selectedPiece = null; return; }
+
 
             ManagePieceMovement(selectedPiece.x, selectedPiece.y, destinationX, destinationY, backRank);
 
-            if (!firstMove)
-            {
-                firstMove = true;
-                timer[1].Start();
-            }                           
-                                        // control 'if else' later
+            if (!firstMove) { firstMove = true; timer[1].Start(); }                           
+
+                                        // control 'if else' fix later
                                         // use 2 threads,
                                         // whiteClockThread and blackClockThread
                                         // that wait for each other
-            else
-            {
-                timer[turn + MoveTowardsBlackOrWhite].Stop();
-                timer[turn].Start();
+
+            else 
+            { 
+                timer[turn + MoveTowardsBlackOrWhite].Stop(); timer[turn].Start(); 
             }
+
 
             CPiece king = FindKing();
 
@@ -648,48 +598,48 @@ namespace WinFormsApp1
 
 
 
-        private void ShortAndLongCastle(int rookX, int Y)
+        private void ManageShortOrLongCastle(int rookX, int backRank)
         {
-            var tmpRook = ChessBoard.Board[rookX, Y];  // copies the rook
+            var tmpRook = ChessBoard.Board[rookX, backRank];  // copies the rook
 
-            FirstRookMove(tmpRook, rookX, Y, Y);
+            FirstRookMove(tmpRook, rookX, backRank, backRank);
 
-            ChessBoard.Board[rookX, Y] = null;
+            ChessBoard.Board[rookX, backRank] = null;
 
-            Button rookSquare = GetButtonAtPosition(rookX, Y);
+            Button rookSquare = GetButtonAtPosition(rookX, backRank);
             rookSquare.BackgroundImage = null;
 
             //transpose the rook
             rookX = (rookX == 0) ? 3 : 5;
 
             tmpRook.x = rookX;
-            ChessBoard.Board[rookX, Y] = tmpRook;
+            ChessBoard.Board[rookX, backRank] = tmpRook;
 
             Bitmap rookImage = SetImageToButton(tmpRook);
 
-            rookSquare = GetButtonAtPosition(rookX, Y);
+            rookSquare = GetButtonAtPosition(rookX, backRank);
             rookSquare.BackgroundImage = rookImage;
         }
 
 
-        private void FirstKingMove(int previusKingX, int previusKingY, int Y)
+        private void FirstKingMove(int previusKingX, int previusKingY, int backRank)
         {
             firstKingMove[turn] = true;
 
-            if (O_O[turn] && previusKingX == 6 && previusKingY == Y)
-                ShortAndLongCastle(7, Y);
+            if (O_O[turn] && previusKingX == 6 && previusKingY == backRank)
+                ManageShortOrLongCastle(7, backRank);
 
-            else if (O_O_O[turn] && previusKingX == 2 && previusKingY == Y)
-                ShortAndLongCastle(0, Y);
+            else if (O_O_O[turn] && previusKingX == 2 && previusKingY == backRank)
+                ManageShortOrLongCastle(0, backRank);
         }
 
 
-        private void FirstRookMove(CPiece selectedPiece, int x, int y, int Y)
+        private void FirstRookMove(CPiece selectedPiece, int x, int y, int backRank)
         {
-            if (selectedPiece.x == 0 && selectedPiece.y == Y)
+            if (selectedPiece.x == 0 && selectedPiece.y == backRank)
                 aRookFirstMove[turn] = true;
 
-            if (selectedPiece.x == 7 && selectedPiece.y == Y)
+            if (selectedPiece.x == 7 && selectedPiece.y == backRank)
                 hRookFirstMove[turn] = true;
         }
 
