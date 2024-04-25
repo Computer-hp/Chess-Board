@@ -111,9 +111,9 @@ namespace WinFormsApp1
 
             Debug.WriteLine($"\nFirst Rank = {(int)Ranks.FirstRank}\n");
 
-            bool firstMoveIsValid = ((piece.pieceType == PieceColor.White && piece.y == (int)Ranks.FirstRank) ||
-                              (piece.pieceType == PieceColor.Black && piece.y == (int)Ranks.SeventhRank))
-                                ? true : false;
+            bool firstMoveIsValid = ((piece.pieceType == PieceColor.White && piece.y == (int)Ranks.SecondRank) ||
+                                     (piece.pieceType == PieceColor.Black && piece.y == (int)Ranks.SeventhRank))
+                                     ? true : false;
 
             if (IsSquareNull(piece.x, piece.y + movePawnTowardsBlackOrWhite))
 
@@ -139,7 +139,8 @@ namespace WinFormsApp1
 
             if (!string.IsNullOrEmpty(direction))
             {
-                CalculateLinearDirections(piece, linearDirections.First(storedDirection => storedDirection.Item1 == direction).Item2, times);
+                CSquare incrementForNextSquare = linearDirections.First(storedDirection => storedDirection.Item1 == direction).Item2;
+                CalculateLinearDirections(piece, incrementForNextSquare, times);
                 return;
             }
 
@@ -195,7 +196,7 @@ namespace WinFormsApp1
             return (!IsSquareOutsideTheBoard(destinationX, destinationY))
 
                 ? (Board[destinationX, destinationY] == null)
-                : throw new Exception("\nThrown an exception due to incorrect coordinates\n");
+                : false; //throw new IndexOutOfRangeException("\nThrown an exception due to incorrect coordinates\n");
         }
 
 

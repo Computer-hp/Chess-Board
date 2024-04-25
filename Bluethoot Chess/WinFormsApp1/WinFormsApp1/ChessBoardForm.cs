@@ -101,11 +101,11 @@ namespace WinFormsApp1
 
 
 
-        public static Bitmap SetImageToButton(CPiece P)
+        public static Bitmap SetImageToButton(CPiece piece)
         {
-            string DIR = P.pieceType.ToString().ToLower();
+            string DIR = piece.pieceType.ToString().ToLower();
 
-            string imagePath = DIR + "\\" + P.pieceName + ".png";
+            string imagePath = DIR + "\\" + piece.pieceName + ".png";
 
             Bitmap originalImage = (Bitmap)Image.FromFile(projectPath + imagePath);
             return originalImage;
@@ -210,29 +210,34 @@ namespace WinFormsApp1
 
             clickedButton.BackgroundImage = SetImageToButton(ChessBoard.Board[destinationX, destinationY]);
 
-            ChessBoard.validMoves.Clear();
-            turn = (turn + 1) % 2;
-            selectedPiece = null;
+            try
+            {
+                if (!isCheck)
+                    return;
 
-            if (!isCheck)
-                return;
+                HandleSituationAfterCheck(king);
 
-            HandleSituationAfterCheck(king);
+                if (!IsCheckmate())
+                    return;
 
-            if (!IsCheckmate())
-                return;
+                var popUp = new RestartForm();
 
-            var popUp = new RestartForm();
+                popUp.StartPosition = FormStartPosition.CenterParent;
 
-            popUp.StartPosition = FormStartPosition.CenterParent;
+                popUp.ShowDialog(this);
 
-            popUp.ShowDialog(this);
+                if (RestartForm.NewGame)
+                    isRestarted = true;
 
-            if (RestartForm.NewGame)
-                isRestarted = true;
-
-            else if (RestartForm.MainMenu)
-                this.Close();
+                else if (RestartForm.MainMenu)
+                    this.Close();
+            }
+            finally
+            {
+                ChessBoard.validMoves.Clear();
+                turn = (turn + 1) % 2;
+                selectedPiece = null;
+            }
         }
 
 
@@ -458,21 +463,21 @@ namespace WinFormsApp1
 
         private void RemoveInvalidPieceMoves(CPiece P)
         {
-            List<CSquare> tmp_list = new();
-            tmp_list.AddRange(ChessBoard.validMoves);
+            List<CSquare> tmpList = new();
+            tmpList.AddRange(ChessBoard.validMoves);
 
-            foreach (var move in tmp_list)
+            foreach (var move in tmpList)
             {
                 if (ChessBoard.IsSquareNull(move.x, move.y))
                     continue;
 
-                CPiece piece = ChessBoard.Board[move.x, move.y];
+                CPiece squareContainingPiece = ChessBoard.Board[move.x, move.y];
 
-                if (piece.pieceType == P.pieceType)
-                    SquareIsInTheList(ChessBoard.validMoves, move.x, move.y);
+                if (squareContainingPiece.pieceType == P.pieceType &&
+                    SquareIsInTheList(ChessBoard.validMoves, move.x, move.y))
+                    RemoveSquaresFromList(ChessBoard.validMoves, move.x, move.y); // incorrect. instead you have to remove
             }
         }
-
 
 
 
