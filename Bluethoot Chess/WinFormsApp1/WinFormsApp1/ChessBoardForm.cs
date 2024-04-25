@@ -192,7 +192,6 @@ namespace WinFormsApp1
 
             if (isCheck && !IsMoveLegalWhenCheck(destinationX, destinationY)) { selectedPiece = null; return; }
 
-
             ManagePieceMovement(selectedPiece.x, selectedPiece.y, destinationX, destinationY, backRank);
 
             if (!firstMove) { firstMove = true; timer[1].Start(); }                           
@@ -202,11 +201,7 @@ namespace WinFormsApp1
                                         // whiteClockThread and blackClockThread
                                         // that wait for each other
 
-            else 
-            { 
-                timer[turn + MoveTowardsBlackOrWhite].Stop(); timer[turn].Start(); 
-            }
-
+            else { timer[turn + MoveTowardsBlackOrWhite].Stop(); timer[turn].Start(); }
 
             CPiece king = FindKing();
 
@@ -215,37 +210,29 @@ namespace WinFormsApp1
 
             clickedButton.BackgroundImage = SetImageToButton(ChessBoard.Board[destinationX, destinationY]);
 
-            try
-            {
-                if (!isCheck)
-                    return;
+            ChessBoard.validMoves.Clear();
+            turn = (turn + 1) % 2;
+            selectedPiece = null;
 
-                HandleSituationAfterCheck(king);
+            if (!isCheck)
+                return;
 
-                if (!IsCheckmate())
-                    return;
+            HandleSituationAfterCheck(king);
 
-                var popUp = new RestartForm();
+            if (!IsCheckmate())
+                return;
 
-                popUp.StartPosition = FormStartPosition.CenterParent;
+            var popUp = new RestartForm();
 
-                popUp.ShowDialog(this);
+            popUp.StartPosition = FormStartPosition.CenterParent;
 
-                if (RestartForm.NewGame)
-                    isRestarted = true;
+            popUp.ShowDialog(this);
 
-                else if (RestartForm.MainMenu)
-                    this.Close();
-            }
-            finally
-            {
+            if (RestartForm.NewGame)
+                isRestarted = true;
 
-                ChessBoard.validMoves.Clear();
-
-                turn = (turn + 1) % 2;
-
-                selectedPiece = null;
-            }
+            else if (RestartForm.MainMenu)
+                this.Close();
         }
 
 
