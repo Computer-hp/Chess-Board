@@ -56,9 +56,8 @@
 
         private void InitializeChessBoardFormButtons()
         {
-            int x = 0, y = BOARD_SIZE - 1;
-
             for (int row = 0; row < BOARD_SIZE; row++)
+
                 for (int col = 0; col < BOARD_SIZE; col++)
                 {
                     Button square = new()
@@ -69,12 +68,12 @@
                         FlatStyle = FlatStyle.Flat,
                         FlatAppearance = { BorderSize = 0 },
                         BackgroundImageLayout = ImageLayout.Zoom,
-                        Tag = (x, y)
+                        Tag = (col, row)
                     };
 
-                    if (ChessBoard.Board[x, y] != null)
+                    if (ChessBoard.Board[row, col] != null)
                     {
-                        Bitmap resizedImage = SetImageToButton(ChessBoard.Board[x, y]);
+                        Bitmap resizedImage = SetImageToButton(ChessBoard.Board[row, col]);
                         square.BackgroundImage = resizedImage;
                     }
                     else
@@ -83,15 +82,6 @@
                     square.Click += Button_Click;
 
                     Controls.Add(square);
-
-                    if (x < BOARD_SIZE - 1)
-                        x++;
-
-                    else
-                    {
-                        x = 0;
-                        y--;
-                    }
                 }
         }
 

@@ -17,7 +17,7 @@ namespace WinFormsApp1
         private const int BUTTON_WIDTH = ChessBoardForm.SQUARE_SIZE;
         private const int BUTTON_HEIGHT = ChessBoardForm.SQUARE_SIZE;
 
-        private readonly List<string> promotionPiecesName = new() { "Q", "R", "B", "N" };
+        private static readonly string[] promotionPiecesName = { "Q", "R", "B", "N" };  // better to use a char[]
 
 
         public PromotionForm(int turn)

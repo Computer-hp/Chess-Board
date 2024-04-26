@@ -15,26 +15,26 @@ namespace WinFormsApp1
 
     public enum Ranks
     {
-        FirstRank,
-        SecondRank,
-        ThirdRank,
-        FourthRank,
-        FifthRank,
-        SixthRank,
+        EighthRank,
         SeventhRank,
-        EighthRank
+        SixthRank,
+        FifthRank,
+        FourthRank,
+        ThirdRank,
+        SecondRank,
+        FirstRank
     };
 
 
     public enum Files
     {
-        FirstFile,
-        SecondFile,
-        ThirdFile,
-        FourthFile,
-        FifthFile,
-        SixthFile,
+        EighthFile,
         SeventhFile,
-        EighthFile
+        SixthFile,
+        FifthFile,
+        FourthFile,
+        ThirdFile,
+        SecondFile,
+        FirstFile
     };
 }

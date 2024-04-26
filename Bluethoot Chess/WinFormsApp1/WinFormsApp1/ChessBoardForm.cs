@@ -20,6 +20,8 @@ using System.Transactions;
 
 
 // TODO  Pin on pieces
+// Checkmate doesn't work, check does.
+// Pawns can move diagonally even when they can't
 
 namespace WinFormsApp1
 {
@@ -31,7 +33,7 @@ namespace WinFormsApp1
 
 
         private int turn = 0;       // 0 for white, 1 for black
-        public static int MoveTowardsBlackOrWhite { get; private set; } = 1;
+        public static int MoveTowardsBlackOrWhite { get; private set; } = -1;
 
         private int[] secondsElapsed = new int[2];
 
@@ -129,17 +131,13 @@ namespace WinFormsApp1
             int destinationX = position.Item1;
             int destinationY = position.Item2;
 
-            var clickedSquare = ChessBoard.Board[destinationX, destinationY];
+            var clickedSquare = ChessBoard.Board[destinationY, destinationX];
 
             if (!PieceGotClicked(clickedSquare) && selectedPiece == null)
                 return;
 
             int backRank = (int)currentPlayer[turn] * (int)Ranks.EighthRank;
-
-            MoveTowardsBlackOrWhite = -1 * (turn * 2 - 1);
-
-            Debug.Write($"\nMoveTowardsBlackOrWhite = {MoveTowardsBlackOrWhite}\n");
-
+            MoveTowardsBlackOrWhite = 1 * (turn * 2 - 1);
 
             if (selectedPiece == null)
                 ManageSelectedPiece(destinationX, destinationY, backRank);
@@ -151,16 +149,18 @@ namespace WinFormsApp1
 
         private void ManageSelectedPiece(int destinationX, int destinationY, int backRank)
         {
-            selectedPiece = ChessBoard.Board[destinationX, destinationY];
+            selectedPiece = ChessBoard.Board[destinationY, destinationX];
             ChessBoard.CalculateMoves(selectedPiece, "");
 
             Debug.WriteLine($"{selectedPiece.pieceName}, {selectedPiece.pieceType}");
             Debug.WriteLine(ChessBoard.ToString() + "\n");
 
+            if (selectedPiece.pieceName != "K")
+                return;
 
             if (selectedPiece.pieceName == "P") { ManageInvalidDiagonalPawnMoves(selectedPiece); return; }
 
-            else if (selectedPiece.pieceName != "K") { RemoveInvalidPieceMoves(selectedPiece); return; }
+            //else if (selectedPiece.pieceName != "K") { RemoveInvalidPieceMoves(selectedPiece); return; }
 
 
             RemoveInvalidSquaresOfKing(selectedPiece);
@@ -198,17 +198,17 @@ namespace WinFormsApp1
 
                                         // control 'if else' fix later
                                         // use 2 threads,
-                                        // whiteClockThread and blackClockThread
-                                        // that wait for each other
+                                        // whiteClockThread and blackClockThread,
+                                        // that have to wait for each other
 
-            else { timer[turn + MoveTowardsBlackOrWhite].Stop(); timer[turn].Start(); }
+            else { timer[turn - MoveTowardsBlackOrWhite].Stop(); timer[turn].Start(); }
 
             CPiece king = FindKing();
 
             if (selectedPiece.pieceName != "K")
                 ControlIfPieceHasGivenCheck(king, destinationX, destinationY);
 
-            clickedButton.BackgroundImage = SetImageToButton(ChessBoard.Board[destinationX, destinationY]);
+            clickedButton.BackgroundImage = SetImageToButton(ChessBoard.Board[destinationY, destinationX]);
 
             try
             {
@@ -245,22 +245,22 @@ namespace WinFormsApp1
         {
             return (ChessBoard.validMoves.Exists(
                 item => item.x == destinationX && item.y == destinationY) && 
-
+                !ChessBoard.IsSquareOutsideTheBoard(destinationX, destinationY) &&
                 (ChessBoard.IsSquareNull(destinationX, destinationY) ||
-                    ChessBoard.Board[destinationX, destinationY].pieceType != currentPlayer[turn]));
+                    ChessBoard.Board[destinationY, destinationX].pieceType != currentPlayer[turn]));
         }
 
 
         private void ManagePieceMovement(int previousX, int previousY, int destinationX, int destinationY, int backRank)
         {
             if (selectedPiece.pieceName == "P")
-                PawnPromotion(selectedPiece, destinationX, destinationY);
+                ManagePawnPromotion(selectedPiece, destinationX, destinationY);
 
 
             Button originalSquare = GetButtonAtPosition(previousX, previousY);
             originalSquare.BackgroundImage = null;
-            ChessBoard.Board[previousX, previousY] = null;
-            ChessBoard.Board[destinationX, destinationY] = new CPiece(destinationX, destinationY, 
+            ChessBoard.Board[previousY, previousX] = null;
+            ChessBoard.Board[destinationY, destinationX] = new CPiece(destinationX, destinationY, 
                                                                             selectedPiece.pieceName, 
                                                                                 selectedPiece.pieceType);
 
@@ -270,7 +270,7 @@ namespace WinFormsApp1
             else if (selectedPiece.pieceName == "R")
                 FirstRookMove(selectedPiece, destinationX, destinationY, backRank);
 
-            ref CPiece movedPiece = ref ChessBoard.Board[destinationX, destinationY];
+            ref CPiece movedPiece = ref ChessBoard.Board[destinationY, destinationX];
 
             movedPiece.x = destinationX;
             movedPiece.y = destinationY;
@@ -399,11 +399,11 @@ namespace WinFormsApp1
             switch (moveTo)
             {
                 case "Straight":
-                    ChessBoard.CalculateMoves(ChessBoard.Board[x, y], direction);
+                    ChessBoard.CalculateMoves(ChessBoard.Board[y, x], direction);
                     break;
 
                 case "Diagonal":
-                    ChessBoard.CalculateMoves(ChessBoard.Board[x, y], direction);
+                    ChessBoard.CalculateMoves(ChessBoard.Board[y, x], direction);
                     break;
             }
 
@@ -420,7 +420,8 @@ namespace WinFormsApp1
             int destinationKingX = startingFile;
 
             for (; startingFile < endingFile; startingFile++)
-                if (!ChessBoard.IsSquareNull(startingFile, backRank))
+                if (!ChessBoard.IsSquareOutsideTheBoard(startingFile, backRank) &&
+                    !ChessBoard.IsSquareNull(startingFile, backRank))
                     return false;
 
             // TODO check if the squares in between the
@@ -461,25 +462,6 @@ namespace WinFormsApp1
         }
 
 
-        private void RemoveInvalidPieceMoves(CPiece P)
-        {
-            List<CSquare> tmpList = new();
-            tmpList.AddRange(ChessBoard.validMoves);
-
-            foreach (var move in tmpList)
-            {
-                if (ChessBoard.IsSquareNull(move.x, move.y))
-                    continue;
-
-                CPiece squareContainingPiece = ChessBoard.Board[move.x, move.y];
-
-                if (squareContainingPiece.pieceType == P.pieceType &&
-                    SquareIsInTheList(ChessBoard.validMoves, move.x, move.y))
-                    RemoveSquaresFromList(ChessBoard.validMoves, move.x, move.y); // incorrect. instead you have to remove
-            }
-        }
-
-
 
         // TODO remove also c1 or g1 square in case of O_O or O_O_O
         private void RemoveInvalidSquaresOfKing(CPiece king)
@@ -500,7 +482,7 @@ namespace WinFormsApp1
 
                 if (piece.pieceName == "P")
                     ChessBoard.validMoves.RemoveAll(square => square.x == piece.x && 
-                                                    square.y == piece.y + (-MoveTowardsBlackOrWhite));
+                                                    square.y == piece.y + (/*-*/MoveTowardsBlackOrWhite));
 
                 tmpKingMoves.RemoveAll(square => 
                                         SquareIsInTheList(ChessBoard.validMoves, square.x, square.y)); // strange but ok
@@ -526,9 +508,10 @@ namespace WinFormsApp1
 
                     if (x >= 0 && x < BOARD_SIZE && 
                         y >= 0 && y < BOARD_SIZE && 
+                        !ChessBoard.IsSquareOutsideTheBoard(x, y) &&
                         !ChessBoard.IsSquareNull(x, y))
 
-                        FindInvalidCapturesKing(king, ChessBoard.Board[x, y]);
+                        FindInvalidCapturesKing(king, ChessBoard.Board[y, x]);
         }
 
 
@@ -592,11 +575,11 @@ namespace WinFormsApp1
 
         private void ManageShortOrLongCastle(int rookX, int backRank)
         {
-            var tmpRook = ChessBoard.Board[rookX, backRank];  // copies the rook
+            var tmpRook = ChessBoard.Board[backRank, rookX];  // copies the rook
 
             FirstRookMove(tmpRook, rookX, backRank, backRank);
 
-            ChessBoard.Board[rookX, backRank] = null;
+            ChessBoard.Board[backRank, rookX] = null;
 
             Button rookSquare = GetButtonAtPosition(rookX, backRank);
             rookSquare.BackgroundImage = null;
@@ -605,7 +588,7 @@ namespace WinFormsApp1
             rookX = (rookX == 0) ? 3 : 5;
 
             tmpRook.x = rookX;
-            ChessBoard.Board[rookX, backRank] = tmpRook;
+            ChessBoard.Board[backRank, rookX] = tmpRook;
 
             Bitmap rookImage = SetImageToButton(tmpRook);
 
@@ -618,20 +601,20 @@ namespace WinFormsApp1
         {
             firstKingMove[turn] = true;
 
-            if (O_O[turn] && previusKingX == 6 && previusKingY == backRank)
-                ManageShortOrLongCastle(7, backRank);
+            if (O_O[turn] && previusKingX == (int)Files.SeventhFile && previusKingY == backRank)
+                ManageShortOrLongCastle((int)Files.SeventhFile, backRank);
 
-            else if (O_O_O[turn] && previusKingX == 2 && previusKingY == backRank)
-                ManageShortOrLongCastle(0, backRank);
+            else if (O_O_O[turn] && previusKingX == (int)Files.ThirdFile && previusKingY == backRank)
+                ManageShortOrLongCastle((int)Files.FirstFile, backRank);
         }
 
 
         private void FirstRookMove(CPiece selectedPiece, int x, int y, int backRank)
         {
-            if (selectedPiece.x == 0 && selectedPiece.y == backRank)
+            if (selectedPiece.x == (int)Files.FirstFile && selectedPiece.y == backRank)
                 aRookFirstMove[turn] = true;
 
-            if (selectedPiece.x == 7 && selectedPiece.y == backRank)
+            if (selectedPiece.x == (int)Files.EighthFile && selectedPiece.y == backRank)
                 hRookFirstMove[turn] = true;
         }
 
@@ -645,18 +628,20 @@ namespace WinFormsApp1
 
         private void RemoveInvalidDiagonalPawnMoves(int destinationX, int destinationY)
         {
-            if (destinationX >= 0 && destinationX < BOARD_SIZE &&
+            if (!ChessBoard.IsSquareOutsideTheBoard(destinationX, destinationY) &&
                 (ChessBoard.IsSquareNull(destinationX, destinationY) ||
-                 ChessBoard.Board[destinationX, destinationY].pieceName == "K"))
+                 ChessBoard.Board[destinationY, destinationX].pieceName == "K"))
 
                 RemoveSquaresFromList(ChessBoard.validMoves, destinationX, destinationY);
         }
 
 
-        private void PawnPromotion(CPiece selectedPiece, int x, int y)
+        private void ManagePawnPromotion(CPiece selectedPiece, int x, int y)
         {
-            if (selectedPiece.y + 1 == 7 && selectedPiece.pieceType == PieceColor.White ||
-                selectedPiece.y - 1 == 0 && selectedPiece.pieceType == PieceColor.Black)
+            if (selectedPiece.y + 1 == (int)Ranks.EighthRank 
+                && selectedPiece.pieceType == PieceColor.White ||
+                selectedPiece.y - 1 == (int)Ranks.FirstRank && 
+                selectedPiece.pieceType == PieceColor.Black)
             {
 
                 var promotion = new PromotionForm(turn);

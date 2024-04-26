@@ -64,13 +64,18 @@ namespace WinFormsApp1
         {
             string[] pieces = { "R", "N", "B", "Q", "K", "B", "N", "R" };
 
-            for (int x = 0; x < 8; x++)
-            {
-                Board[x, 1] = new CPiece(x, (int)Ranks.SecondRank, "P", PieceColor.White);
-                Board[x, 0] = new CPiece(x, (int)Ranks.FirstRank, pieces[x], PieceColor.White);
+            int firstRank = (int)Ranks.FirstRank;
+            int secondRank = (int)Ranks.SecondRank;
+            int seventhRank = (int)Ranks.SeventhRank;
+            int eightRank = (int)Ranks.EighthRank;
 
-                Board[x, 6] = new CPiece(x, (int)Ranks.SeventhRank, "P", PieceColor.Black);
-                Board[x, 7] = new CPiece(x, (int)Ranks.EighthRank, pieces[x], PieceColor.Black);
+            for (int x = 0; x < BOARD_SIZE; x++)
+            {
+                Board[secondRank, x] = new CPiece(x, secondRank, "P", PieceColor.White);
+                Board[firstRank, x] = new CPiece(x, firstRank, pieces[x], PieceColor.White);
+
+                Board[seventhRank, x] = new CPiece(x, seventhRank, "P", PieceColor.Black);
+                Board[eightRank, x] = new CPiece(x, eightRank, pieces[x], PieceColor.Black);
             }
         }
 
@@ -95,42 +100,48 @@ namespace WinFormsApp1
 
 
         /*
-            Calculates the legal pawn moves. 
+            Calculates the legal and illegal pawn moves.
         */
 
         // TODO   En passant
 
-        private void PawnMoves(CPiece piece)
+        private void PawnMoves(CPiece pawn)
         {
             int movePawnTowardsBlackOrWhite = ChessBoardForm.MoveTowardsBlackOrWhite;
+            int destinationRank = pawn.y + movePawnTowardsBlackOrWhite;
 
-            if (piece.y + movePawnTowardsBlackOrWhite < 0 || 
-                piece.y + movePawnTowardsBlackOrWhite >= BOARD_SIZE)
-
+            if (IsSquareOutsideTheBoard(pawn.x, destinationRank))
                 return;
 
-            Debug.WriteLine($"\nFirst Rank = {(int)Ranks.FirstRank}\n");
+            if (IsSquareNull(pawn.x, destinationRank))
+                validMoves.Add(new CSquare(pawn.x, destinationRank));
 
-            bool firstMoveIsValid = ((piece.pieceType == PieceColor.White && piece.y == (int)Ranks.SecondRank) ||
-                                     (piece.pieceType == PieceColor.Black && piece.y == (int)Ranks.SeventhRank))
-                                     ? true : false;
+            for (int x = pawn.x - 1; x < pawn.x + 2; x += 2)
+            {
+                if (IsSquareOutsideTheBoard(x, destinationRank))
+                    continue;
+                
+                validMoves.Add(new CSquare(x, destinationRank));
+            }
 
-            if (IsSquareNull(piece.x, piece.y + movePawnTowardsBlackOrWhite))
+            int destinationRankOfFirstPawnMove = pawn.y + movePawnTowardsBlackOrWhite * 2;
 
-                validMoves.Add(new CSquare(piece.x, piece.y + movePawnTowardsBlackOrWhite));
+            if (!IsPawnBeingMovedForTheFirstTime(pawn) ||
+                IsSquareOutsideTheBoard(pawn.x, destinationRankOfFirstPawnMove) ||
 
+                !IsSquareNull(pawn.x, destinationRankOfFirstPawnMove))
+                return;
 
-            if (firstMoveIsValid && 
-                IsSquareNull(piece.x, piece.y + (movePawnTowardsBlackOrWhite * 2)))
-
-                validMoves.Add(new CSquare(piece.x, piece.y + (movePawnTowardsBlackOrWhite * 2)));
-
-
-            validMoves.Add(new CSquare(piece.x + movePawnTowardsBlackOrWhite, piece.y + movePawnTowardsBlackOrWhite));
-            validMoves.Add(new CSquare(piece.x - movePawnTowardsBlackOrWhite, piece.y + movePawnTowardsBlackOrWhite));
-
-            validMoves.RemoveAll(square => square.x < 0 || square.x >= BOARD_SIZE);
+            validMoves.Add(new CSquare(pawn.x, destinationRankOfFirstPawnMove));
         }
+
+
+        private bool IsPawnBeingMovedForTheFirstTime(CPiece piece)
+        {
+            return ((piece.pieceType == PieceColor.White && piece.y == (int)Ranks.SecondRank) ||
+                    (piece.pieceType == PieceColor.Black && piece.y == (int)Ranks.SeventhRank));
+        }
+
 
 
         private void ManageLinearDirections(CPiece piece, string direction)
@@ -144,9 +155,10 @@ namespace WinFormsApp1
                 return;
             }
 
-            int startingIndexForDirections = (piece.pieceName == "R") ? 0 : (piece.pieceName == "B") ? 4 : 1;
-            int endingIndexForDirections = (piece.pieceName == "R")
-                                            ? NUMBER_OF_DIRECTIONS / 2 : NUMBER_OF_DIRECTIONS;
+            int startingIndexForDirections = (piece.pieceName == "R") ? 0 
+                                                                         : (piece.pieceName == "B") ? 4 : 0;
+
+            int endingIndexForDirections = (piece.pieceName == "R") ? NUMBER_OF_DIRECTIONS / 2 : NUMBER_OF_DIRECTIONS;
 
             for (int i = startingIndexForDirections; i < endingIndexForDirections; i++)
                 CalculateLinearDirections(piece, linearDirections[i].Item2, times);
@@ -190,22 +202,17 @@ namespace WinFormsApp1
         }
 
 
-
-        public bool IsSquareNull(int destinationX, int destinationY)
-        {
-            return (!IsSquareOutsideTheBoard(destinationX, destinationY))
-
-                ? (Board[destinationX, destinationY] == null)
-                : false; //throw new IndexOutOfRangeException("\nThrown an exception due to incorrect coordinates\n");
-        }
-
-
         public bool IsSquareOutsideTheBoard(int destinationX, int destinationY)
         {
             return (destinationX < 0 || destinationX >= BOARD_SIZE ||
                     destinationY < 0 || destinationY >= BOARD_SIZE);
         }
 
+
+        public bool IsSquareNull(int destinationX, int destinationY)
+        {
+            return (Board[destinationY, destinationX] == null);
+        }
 
 
         public override string ToString()
