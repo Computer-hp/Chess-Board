@@ -21,7 +21,7 @@ namespace WinFormsApp1
 
         public CPiece[,] Board { get { return mBoard; } set { mBoard = value; } }
 
-        public List<CSquare> validMoves { get; set; } = new();
+        public List<CSquare> ValidMoves { get; set; } = new();
 
         public List<CSquare> copyMoves { get; set; } = new();
 
@@ -47,6 +47,9 @@ namespace WinFormsApp1
             (2, 1), (2, -1), (-2, 1), (-2, -1),
             (1, 2), (1, -2), (-1, 2), (-1, -2)
         };
+
+
+        public int MovePawnTowardsBlackOrWhite { get; set; } = -1;
 
 
 
@@ -82,7 +85,7 @@ namespace WinFormsApp1
 
         public void CalculateMoves(CPiece piece, string direction)
         {
-            validMoves.Clear();
+            ValidMoves.Clear();
 
             switch (piece.pieceName)
             {
@@ -107,21 +110,22 @@ namespace WinFormsApp1
 
         private void PawnMoves(CPiece pawn)
         {
-            int movePawnTowardsBlackOrWhite = ChessBoardForm.MoveTowardsBlackOrWhite;
+            int movePawnTowardsBlackOrWhite = (pawn.pieceType == PieceColor.White) ? -1 : 1;
+
             int destinationRank = pawn.y + movePawnTowardsBlackOrWhite;
 
             if (IsSquareOutsideTheBoard(pawn.x, destinationRank))
                 return;
 
             if (IsSquareNull(pawn.x, destinationRank))
-                validMoves.Add(new CSquare(pawn.x, destinationRank));
+                ValidMoves.Add(new CSquare(pawn.x, destinationRank));
 
             for (int x = pawn.x - 1; x < pawn.x + 2; x += 2)
             {
                 if (IsSquareOutsideTheBoard(x, destinationRank))
                     continue;
                 
-                validMoves.Add(new CSquare(x, destinationRank));
+                ValidMoves.Add(new CSquare(x, destinationRank));
             }
 
             int destinationRankOfFirstPawnMove = pawn.y + movePawnTowardsBlackOrWhite * 2;
@@ -132,7 +136,7 @@ namespace WinFormsApp1
                 !IsSquareNull(pawn.x, destinationRankOfFirstPawnMove))
                 return;
 
-            validMoves.Add(new CSquare(pawn.x, destinationRankOfFirstPawnMove));
+            ValidMoves.Add(new CSquare(pawn.x, destinationRankOfFirstPawnMove));
         }
 
 
@@ -179,11 +183,11 @@ namespace WinFormsApp1
 
                 if (!IsSquareNull(destinationX, destinationY))
                 {
-                    validMoves.Add(new CSquare(destinationX, destinationY));
+                    ValidMoves.Add(new CSquare(destinationX, destinationY));
                     return;
                 }
 
-                validMoves.Add(new CSquare(destinationX, destinationY));
+                ValidMoves.Add(new CSquare(destinationX, destinationY));
             }
         }
 
@@ -197,7 +201,7 @@ namespace WinFormsApp1
                 int newY = piece.y + move.y;
 
                 if (!IsSquareOutsideTheBoard(newX, newY))
-                    validMoves.Add(new CSquare(newX, newY));
+                    ValidMoves.Add(new CSquare(newX, newY));
             }                
         }
 
@@ -219,7 +223,7 @@ namespace WinFormsApp1
         {
             string output = "";
 
-            foreach (var element in validMoves)
+            foreach (var element in ValidMoves)
                 output += element.x + "," + element.y + " ";
 
             return output;
