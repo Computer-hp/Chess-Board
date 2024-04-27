@@ -20,7 +20,7 @@ using System.Transactions;
 
 
 // TODO  Pin on pieces
-// Checkmate doesn't work, check does.
+// O_O and O_O_O somehow don't work now
 
 namespace WinFormsApp1
 {
@@ -300,6 +300,7 @@ namespace WinFormsApp1
         private void ControlIfPieceHasGivenCheck(CPiece king, int destinationX, int destinationY)
         {
             chessBoard.ValidMoves.Clear();
+            var lastPieceMoved = chessBoard.Board[destinationY, destinationX];
 
             if (selectedPiece.pieceName == "R" || selectedPiece.pieceName == "Q")
                 DefineDirectionTowardsKing("Straight", king, destinationX, destinationY);
@@ -308,7 +309,7 @@ namespace WinFormsApp1
                 DefineDirectionTowardsKing("Diagonal", king, destinationX, destinationY);
 
             else
-                chessBoard.CalculateMoves(selectedPiece, "");
+                chessBoard.CalculateMoves(lastPieceMoved, ""); // for the pawn or knight
 
 
             chessBoard.ValidMoves.Add(new CSquare(destinationX, destinationY));  // piece that gives check can also be captured
@@ -499,7 +500,7 @@ namespace WinFormsApp1
                                         IsSquareInList(chessBoard.ValidMoves, square.x, square.y)); // strange but ok
             }
             
-            chessBoard.ValidMoves.Clear();
+            chessBoard.ValidMoves.Clear();  // if this is removed than ValidMoves will contain the moves of the piece that protects the one that gave check
             chessBoard.ValidMoves.AddRange(tmpKingMoves);
 
             CheckPiecesNearKing(king);
@@ -528,7 +529,10 @@ namespace WinFormsApp1
 
         private void FindInvalidCapturesKing(CPiece king, CPiece pieceNearKing)
         {
-            if (king.pieceType == pieceNearKing.pieceType) // if a piece is placed near the king
+            if (king.Equals(pieceNearKing))
+                return;
+
+            if (king.pieceType == pieceNearKing.pieceType) // if a piece with the same color is placed near the king
             {
                 RemoveSquaresFromList(chessBoard.ValidMoves, pieceNearKing.x, pieceNearKing.y);
                 return;
@@ -556,8 +560,12 @@ namespace WinFormsApp1
                     RemoveSquaresFromList(tmpKingMoves, pieceNearKing.x, pieceNearKing.y);
                     break;
                 }
+                
+                if (piece.x == 2 && piece.y == 4)
+                    Console.Write("\nTarget\n");
             }
 
+            chessBoard.ValidMoves.Clear();
             chessBoard.ValidMoves.AddRange(tmpKingMoves);
         }
 
