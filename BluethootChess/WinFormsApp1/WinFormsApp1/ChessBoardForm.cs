@@ -126,11 +126,13 @@ namespace WinFormsApp1
             var position = (ValueTuple<int, int>)clickedButton.Tag;
 
             int destinationX = position.Item1, destinationY = position.Item2;
+            Debug.Write($"\nclicked_button = {destinationX}, {destinationY}\n");
             var clickedSquare = chessBoard[destinationY, destinationX];
 
             if (!PieceGotClicked(clickedSquare) && selectedPiece == null) return;
 
-            int backRank = (int)currentPlayer[turn] * (int)Ranks.EighthRank;
+            int firstRank = (int)Ranks.FirstRank;
+            int backRank = Math.Abs((int)currentPlayer[turn] * firstRank - firstRank);
 
             if (selectedPiece == null) ManageSelectedPiece(destinationX, destinationY, backRank);
 
@@ -160,9 +162,12 @@ namespace WinFormsApp1
 
             RemoveInvalidSquaresOfKing(selectedPiece);
 
-            if (!O_O_O[turn])  O_O_O[turn] = IsCastleLegal((int)Files.SecondFile, (int)Files.FourthFile, backRank, aRookFirstMove[turn]);
+            if (!O_O_O[turn])  O_O_O[turn] = IsCastleLegal((int)Files.ThirdFile, (int)Files.FifthFile, backRank, aRookFirstMove[turn]);
 
             if (!O_O[turn])  O_O[turn] = IsCastleLegal((int)Files.SixthFile, (int)Files.EighthFile, backRank, hRookFirstMove[turn]);
+
+            Debug.WriteLine($"{selectedPiece.pieceName}, {selectedPiece.pieceType}");
+            Debug.WriteLine(chessBoard.ToString() + "\n");
         }
 
 
@@ -264,11 +269,11 @@ namespace WinFormsApp1
                 ManageFirstKingMove(destinationX, destinationY, backRank);
 
             else if (selectedPiece.pieceName == "R")
-                ManageFirstRookMove(selectedPiece, destinationX, destinationY, backRank);
+                ManageFirstRookMove(selectedPiece, backRank);
 
             ref Piece movedPiece = ref chessBoard.GetPieceRef(destinationY, destinationX);
 
-            movedPiece.x = destinationX;
+            movedPiece.x = destinationX; // null reference i don't know why
             movedPiece.y = destinationY;
         }
 
@@ -403,22 +408,23 @@ namespace WinFormsApp1
         }
 
 
-        // doesn't work, or maybe 'ManageShortOrLongCastle()' doesn't work cause there are some problems on moving the black rook or white king
         private bool IsCastleLegal(int startingFile, int endingFile, int backRank, bool firstRookMove)
         {
             if (firstKingMove[turn] || firstRookMove) return false;
+
+            // controls if [0, 1] is null for O_O_O
+            if (startingFile == (int)Files.ThirdFile &&
+                !chessBoard.IsSquareNull(startingFile - 1, endingFile))
+                return false;
 
             var king = selectedPiece;
 
             List<Square> tmpKingMoves = new();
             tmpKingMoves.AddRange(chessBoard.ValidMoves);
 
-                                  // the Fourht file is not included in case of O_O_O
             for (; startingFile < endingFile; startingFile++)
             {
                 if (!chessBoard.IsSquareNull(startingFile, backRank)) return false; // squares are never outside the board
-
-                if (startingFile == (int)Files.SecondFile) continue;
 
                                 // control if squares from starting to ending File are into opponents piece moves
                 foreach (var piece in chessBoard)
@@ -432,17 +438,17 @@ namespace WinFormsApp1
 
                     if (piece.pieceName == "P")
                         chessBoard.ValidMoves.RemoveAll(square => square.x == piece.x && 
-                                                    (square.y == piece.y + chessBoard.MovePawnTowardsBlackOrWhite * (-1) ||
-                                                     square.y == piece.y + chessBoard.MovePawnTowardsBlackOrWhite * (-2)));
+                                                        (square.y == piece.y + chessBoard.MovePawnTowardsBlackOrWhite * (-1) ||
+                                                        square.y == piece.y + chessBoard.MovePawnTowardsBlackOrWhite * (-2)));
 
                     if (IsSquareInList(chessBoard.ValidMoves, startingFile, backRank)) return false;
                 }
             }
 
+            tmpKingMoves.Add(new Square(endingFile - 1, backRank)); // add the square to enable O_O or O_O_O
             chessBoard.ValidMoves.Clear();
             chessBoard.ValidMoves.AddRange(tmpKingMoves);
-            chessBoard.ValidMoves.Add(new Square(endingFile - 1, backRank)); // add the square to enable O_O or O_O_O
-            return false;
+            return true;
         }
 
 
@@ -578,24 +584,24 @@ namespace WinFormsApp1
 
 
 
-        private void ManageShortOrLongCastle(int rookX, int backRank)
+        private void ManageShortOrLongCastle(int previousRookX, int backRank)
         {
-            var tmpRook = chessBoard[backRank, rookX];  // copies the rook
+            var tmpRook = chessBoard[backRank, previousRookX];  // copies the rook
 
-            ManageFirstRookMove(tmpRook, rookX, backRank, backRank);
+            ManageFirstRookMove(tmpRook, backRank);
 
-            chessBoard[backRank, rookX] = null;
+            chessBoard[backRank, previousRookX] = null;
 
-            Button rookSquare = GetButtonAtPosition(rookX, backRank);
+            Button rookSquare = GetButtonAtPosition(previousRookX, backRank);
             rookSquare.BackgroundImage = null;
 
             //transpose the rook
-            tmpRook.x = (rookX == (int)Files.FirstFile) ? (int)Files.FourthFile : (int)Files.SixthFile;
-            chessBoard[backRank, rookX] = tmpRook;
+            tmpRook.x = (previousRookX == (int)Files.FirstFile) ? (int)Files.FourthFile : (int)Files.SixthFile;
+            chessBoard[backRank, tmpRook.x] = tmpRook;
 
             Bitmap rookImage = SetImageToButton(tmpRook);
 
-            rookSquare = GetButtonAtPosition(rookX, backRank);
+            rookSquare = GetButtonAtPosition(tmpRook.x, backRank);
             rookSquare.BackgroundImage = rookImage;
 
         }
@@ -613,7 +619,7 @@ namespace WinFormsApp1
         }
 
 
-        private void ManageFirstRookMove(Piece selectedPiece, int x, int y, int backRank)
+        private void ManageFirstRookMove(Piece selectedPiece, int backRank)
         {
             if (selectedPiece.x == (int)Files.FirstFile && selectedPiece.y == backRank)
                 aRookFirstMove[turn] = true;
@@ -660,6 +666,7 @@ namespace WinFormsApp1
         }
 
 
+        // maybe it's better to create two objects, whiteKing and blackKing
         private Piece FindKing()
         {
             foreach (var piece in chessBoard)
