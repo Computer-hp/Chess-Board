@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace WinFormsApp1
 {
-    public class CSquare
+    public struct Square
     {
         public int x { get; set; }
         public int y { get; set; }
 
-        public CSquare(int x, int y)
+        public Square(int x, int y)
         {
             this.x = x;
             this.y = y;

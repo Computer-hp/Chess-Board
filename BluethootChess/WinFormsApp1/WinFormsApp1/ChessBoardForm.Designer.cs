@@ -71,9 +71,9 @@
                         Tag = (col, row)
                     };
 
-                    if (chessBoard.Board[row, col] != null)
+                    if (chessBoard[row, col] != null)
                     {
-                        Bitmap resizedImage = SetImageToButton(chessBoard.Board[row, col]);
+                        Bitmap resizedImage = SetImageToButton(chessBoard[row, col]);
                         square.BackgroundImage = resizedImage;
                     }
                     else

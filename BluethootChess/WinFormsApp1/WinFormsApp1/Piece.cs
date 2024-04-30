@@ -6,16 +6,15 @@ using System.Threading.Tasks;
 
 namespace WinFormsApp1
 {
-    public class CPiece
+    public class Piece
     {
         public int x {  get; set; }
         public int y { get; set; }
-
         public string pieceName { get; }
         public PieceColor pieceType { get; }
 
 
-        public CPiece(int x, int y, string pieceName, PieceColor pieceType)
+        public Piece(int x, int y, string pieceName, PieceColor pieceType)
         {
             this.x = x;
             this.y = y;
