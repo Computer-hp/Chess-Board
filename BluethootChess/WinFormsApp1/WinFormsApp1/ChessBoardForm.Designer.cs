@@ -71,16 +71,8 @@
                         Tag = (col, row)
                     };
 
-                    if (chessBoard[row, col] != null)
-                    {
-                        Bitmap resizedImage = SetImageToButton(chessBoard[row, col]);
-                        square.BackgroundImage = resizedImage;
-                    }
-                    else
-                        square.BackgroundImage = null;
-
+                    square.BackgroundImage = (chessBoard[row, col] != null) ? GetImageForButton(chessBoard[row, col]) : null;
                     square.Click += Button_Click;
-
                     Controls.Add(square);
                 }
         }
@@ -111,7 +103,7 @@
 
 
 
-        private void Form1_FormClosing(object? sender, FormClosingEventArgs e)
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (isRestarted)
             {
@@ -135,7 +127,7 @@
 
 
 
-        private void Timer_Tick(object? sender, EventArgs e)
+        private void Timer_Tick(object sender, EventArgs e)
         {
             secondsElapsed[turn]++;
 

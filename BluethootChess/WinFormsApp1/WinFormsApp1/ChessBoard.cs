@@ -38,12 +38,12 @@ namespace WinFormsApp1
             (1, 2), (1, -2), (-1, 2), (-1, -2)
         };
 
-
+        // maybe is better to use HashSet then List, for ValidMoves and CopyMoves
         public List<Square> ValidMoves { get; set; } = new();
 
         public List<Square> CopyMoves { get; set; } = new();
 
-        public Dictionary<Tuple<int, int>, List<Square>> StopCheckWithPiece { get; set; } = new();
+        public Dictionary<ValueTuple<int, int>, List<Square>> StopCheckWithPiece { get; set; } = new();
 
         public int MovePawnTowardsBlackOrWhite { get; set; } = -1;
 
@@ -115,7 +115,7 @@ namespace WinFormsApp1
         {
             ValidMoves.Clear();
 
-            switch (piece.pieceName)
+            switch (piece.Name)
             {
                 case "P":
                     PawnMoves(piece);
@@ -138,7 +138,7 @@ namespace WinFormsApp1
 
         private void PawnMoves(Piece pawn)
         {
-            int movePawnTowardsBlackOrWhite = (pawn.pieceType == PieceColor.White) ? -1 : 1;
+            int movePawnTowardsBlackOrWhite = (pawn.Color == PieceColor.White) ? -1 : 1;
             int destinationRank = pawn.y + movePawnTowardsBlackOrWhite;
 
             if (IsSquareOutsideTheBoard(pawn.x, destinationRank)) return;
@@ -164,15 +164,15 @@ namespace WinFormsApp1
 
         private static bool IsPawnBeingMovedForTheFirstTime(Piece piece)
         {
-            return ((piece.pieceType == PieceColor.White && piece.y == (int)Ranks.SecondRank) ||
-                    (piece.pieceType == PieceColor.Black && piece.y == (int)Ranks.SeventhRank));
+            return ((piece.Color == PieceColor.White && piece.y == (int)Ranks.SecondRank) ||
+                    (piece.Color == PieceColor.Black && piece.y == (int)Ranks.SeventhRank));
         }
 
 
 
         private void ManageLinearDirections(Piece piece, string direction)
         {
-            int times = (piece.pieceName == "K") ? 1 : BOARD_SIZE;
+            int times = (piece.Name == "K") ? 1 : BOARD_SIZE;
 
             if (!string.IsNullOrEmpty(direction))
             {
@@ -181,10 +181,10 @@ namespace WinFormsApp1
                 return;
             }
 
-            int startingIndexForDirections = (piece.pieceName == "R") ? 0 
-                                             : (piece.pieceName == "B") ? 4 : 0;
+            int startingIndexForDirections = (piece.Name == "R") ? 0 
+                                             : (piece.Name == "B") ? 4 : 0;
 
-            int endingIndexForDirections = (piece.pieceName == "R") ? NUMBER_OF_DIRECTIONS / 2 : NUMBER_OF_DIRECTIONS;
+            int endingIndexForDirections = (piece.Name == "R") ? NUMBER_OF_DIRECTIONS / 2 : NUMBER_OF_DIRECTIONS;
 
             for (int i = startingIndexForDirections; i < endingIndexForDirections; i++)
                 CalculateLinearDirections(piece, linearDirections[i].Item2, times);
@@ -221,8 +221,7 @@ namespace WinFormsApp1
                 int newX = piece.x + move.x;
                 int newY = piece.y + move.y;
 
-                if (!IsSquareOutsideTheBoard(newX, newY))
-                    ValidMoves.Add(new Square(newX, newY));
+                if (!IsSquareOutsideTheBoard(newX, newY)) ValidMoves.Add(new Square(newX, newY));
             }                
         }
 
@@ -248,6 +247,24 @@ namespace WinFormsApp1
                 output += element.x + "," + element.y + " ";
 
             return output;
+        }
+
+
+        public void PrintMovesThatCanStopCheck()
+        {
+            Debug.Write("\nStopCheckWithPiece = \n");
+            
+            foreach (var kvp in this.StopCheckWithPiece)
+            {
+                Debug.Write($"Key: ({kvp.Key.Item1}, {kvp.Key.Item2}), Squares: ");
+
+                foreach (var square in kvp.Value)
+                    Debug.Write($"{square.x}, {square.y} ");
+
+                Debug.Write('\n');
+            }
+
+            Debug.Write('\n');
         }
     }
 }

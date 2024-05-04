@@ -53,7 +53,7 @@
             int formWidth = this.ClientSize.Width;
             int formHeight = this.ClientSize.Height;
 
-            Bitmap resizedImage = ChessBoardForm.SetImageToButton(new Piece(0, 0, buttonName, pieceTypeDir));
+            Bitmap resizedImage = ChessBoardForm.GetImageForButton(new Piece(0, 0, buttonName, pieceTypeDir));
 
             Button button = new()
             {

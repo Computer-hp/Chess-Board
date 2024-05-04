@@ -12,7 +12,7 @@ namespace WinFormsApp1
 {
     public partial class PromotionForm : Form
     {
-        public string PieceName { get; set; }
+        public string Name { get; set; }
 
         private const int BUTTON_WIDTH = ChessBoardForm.SQUARE_SIZE;
         private const int BUTTON_HEIGHT = ChessBoardForm.SQUARE_SIZE;
@@ -40,7 +40,7 @@ namespace WinFormsApp1
         private void Piece_Promote(object sender, EventArgs e)
         {
             Button button = (Button)sender;
-            PieceName = button.Name;
+            Name = button.Name;
             this.Close();
         }
     }
