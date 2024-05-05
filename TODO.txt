@@ -1,9 +1,2 @@
-fix:
-
-ChessBoard.cs
-
-Form1.cs
-
-Form2.cs
-
-Form3.cs
+ChessBoard.cs --> use ValueTuple or (int, int) instead of struct Square for list.
+Maybe, create a method that ads the tuple to a list
