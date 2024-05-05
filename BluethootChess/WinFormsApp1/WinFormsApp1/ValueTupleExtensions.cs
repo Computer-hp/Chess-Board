@@ -8,7 +8,7 @@ namespace WinFormsApp1
 {
     public static class ValueTupleExtensions
     {
-        public static int X(this (int, int) tuple) => tuple.Item1;
-        public static int Y(this (int, int) tuple) => tuple.Item2;
+        public static int GetX(this (int, int) tuple) => tuple.Item1;
+        public static int GetY(this (int, int) tuple) => tuple.Item2;
     }
 }

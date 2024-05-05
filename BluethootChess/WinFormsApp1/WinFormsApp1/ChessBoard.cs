@@ -20,16 +20,16 @@ namespace WinFormsApp1
 
         private Piece[,] board;
            
-        private static readonly (string, Square)[] linearDirections =
+        private static readonly (string, (int, int))[] linearDirections =
         {
-            ( "Up", new Square(0, 1) ),
-            ( "Down", new Square(0, -1) ),
-            ( "Right", new Square(1, 0) ),
-            ( "Left", new Square(-1, 0) ),
-            ( "RightUp", new Square(1, 1) ),
-            ( "RightDown", new Square(1, -1) ),
-            ( "LeftUp", new Square(-1, 1) ),
-            ( "LeftDown", new Square(-1, -1) )
+            ( "Up",         (0, 1) ),
+            ( "Down",       (0, -1) ),
+            ( "Right",      (1, 0) ),
+            ( "Left",       (-1, 0) ),
+            ( "RightUp",    (1, 1) ),
+            ( "RightDown",  (1, -1) ),
+            ( "LeftUp",     (-1, 1) ),
+            ( "LeftDown",   (-1, -1) )
         };
 
         private static readonly (int x, int y)[] knightMoves = 
@@ -51,12 +51,12 @@ namespace WinFormsApp1
         {
             get 
             {
-                if (IsSquareOutsideTheBoard(x, y)) throw new IndexOutOfRangeException();
+                if (IsSquareOutsideTheBoard((x, y))) throw new IndexOutOfRangeException();
                 return board[y, x]; 
             }
             set 
             { 
-                if (IsSquareOutsideTheBoard(x, y)) throw new IndexOutOfRangeException();
+                if (IsSquareOutsideTheBoard((x, y))) throw new IndexOutOfRangeException();
                 board[y, x] = value; 
             }
         }
@@ -74,7 +74,7 @@ namespace WinFormsApp1
 
         public ref Piece GetPieceRef(int y, int x)
         {
-            if (IsSquareOutsideTheBoard(x, y)) throw new IndexOutOfRangeException();
+            if (IsSquareOutsideTheBoard((x, y))) throw new IndexOutOfRangeException();
 
             return ref board[y, x];
         }
@@ -141,21 +141,21 @@ namespace WinFormsApp1
             int movePawnTowardsBlackOrWhite = (pawn.Color == PieceColor.White) ? -1 : 1;
             int destinationRank = pawn.y + movePawnTowardsBlackOrWhite;
 
-            if (IsSquareOutsideTheBoard(pawn.x, destinationRank)) return;
+            if (IsSquareOutsideTheBoard((pawn.x, destinationRank))) return;
 
-            if (IsSquareNull(pawn.x, destinationRank)) ValidMoves.Add(new Square(pawn.x, destinationRank));
+            if (IsSquareNull((pawn.x, destinationRank))) ValidMoves.Add(new Square(pawn.x, destinationRank));
 
             for (int x = pawn.x - 1; x < pawn.x + 2; x += 2)
             {
-                if (IsSquareOutsideTheBoard(x, destinationRank)) continue;
+                if (IsSquareOutsideTheBoard((x, destinationRank))) continue;
                 ValidMoves.Add(new Square(x, destinationRank));
             }
 
             int destinationRankOfFirstPawnMove = pawn.y + movePawnTowardsBlackOrWhite * 2;
 
             if (!IsPawnBeingMovedForTheFirstTime(pawn) ||
-                IsSquareOutsideTheBoard(pawn.x, destinationRankOfFirstPawnMove) ||
-                !IsSquareNull(pawn.x, destinationRankOfFirstPawnMove)) 
+                IsSquareOutsideTheBoard((pawn.x, destinationRankOfFirstPawnMove)) ||
+                !IsSquareNull((pawn.x, destinationRankOfFirstPawnMove))) 
                 return;
 
             ValidMoves.Add(new Square(pawn.x, destinationRankOfFirstPawnMove));
@@ -176,7 +176,7 @@ namespace WinFormsApp1
 
             if (!string.IsNullOrEmpty(direction))
             {
-                Square incrementForNextSquare = linearDirections.First(storedDirection => storedDirection.Item1 == direction).Item2;
+                ValueTuple<int, int> incrementForNextSquare = linearDirections.First(storedDirection => storedDirection.Item1 == direction).Item2;
                 CalculateLinearDirections(piece, incrementForNextSquare, times);
                 return;
             }
@@ -191,18 +191,18 @@ namespace WinFormsApp1
         }
 
 
-        private void CalculateLinearDirections(Piece piece, Square incrementForNextSquare, int times)
+        private void CalculateLinearDirections(Piece piece, ValueTuple<int, int> incrementForNextSquare, int times)
         {
             int destinationX = piece.x, destinationY = piece.y;
 
             for (int i = 0; i < times; i++)
             {
-                destinationX += incrementForNextSquare.x;
-                destinationY += incrementForNextSquare.y;
+                destinationX += incrementForNextSquare.GetX();
+                destinationY += incrementForNextSquare.GetY();
 
-                if (IsSquareOutsideTheBoard(destinationX, destinationY)) return;
+                if (IsSquareOutsideTheBoard((destinationX, destinationY))) return;
 
-                if (!IsSquareNull(destinationX, destinationY))
+                if (!IsSquareNull((destinationX, destinationY)))
                 {
                     ValidMoves.Add(new Square(destinationX, destinationY));
                     return;
@@ -221,21 +221,21 @@ namespace WinFormsApp1
                 int newX = piece.x + move.x;
                 int newY = piece.y + move.y;
 
-                if (!IsSquareOutsideTheBoard(newX, newY)) ValidMoves.Add(new Square(newX, newY));
+                if (!IsSquareOutsideTheBoard((newX, newY))) ValidMoves.Add(new Square(newX, newY));
             }                
         }
 
 
-        public static bool IsSquareOutsideTheBoard(int destinationX, int destinationY)
+        public static bool IsSquareOutsideTheBoard(ValueTuple<int, int> destinationSquare)
         {
-            return (destinationX < 0 || destinationX >= BOARD_SIZE ||
-                    destinationY < 0 || destinationY >= BOARD_SIZE);
+            return (destinationSquare.GetX() < 0 || destinationSquare.GetX() >= BOARD_SIZE ||
+                    destinationSquare.GetY() < 0 || destinationSquare.GetY() >= BOARD_SIZE);
         }
 
 
-        public bool IsSquareNull(int destinationX, int destinationY)
+        public bool IsSquareNull(ValueTuple<int, int> destinationSquare)
         {
-            return (board[destinationY, destinationX] == null);
+            return (board[destinationSquare.GetY(), destinationSquare.GetX()] == null);
         }
 
 
