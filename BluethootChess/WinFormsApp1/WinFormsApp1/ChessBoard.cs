@@ -20,7 +20,7 @@ namespace WinFormsApp1
 
         private Piece[,] board;
            
-        private static readonly (string, (int, int))[] linearDirections =
+        private static readonly (string direction, (int x, int y) moveBy)[] linearDirections =
         {
             ( "Up",         (0, 1) ),
             ( "Down",       (0, -1) ),
@@ -39,11 +39,11 @@ namespace WinFormsApp1
         };
 
         // maybe is better to use HashSet then List, for ValidMoves and CopyMoves
-        public List<Square> ValidMoves { get; set; } = new();
+        public List<(int x, int y)> ValidMoves { get; set; } = new();
 
-        public List<Square> CopyMoves { get; set; } = new();
+        public List<(int x, int y)> CopyMoves { get; set; } = new();
 
-        public Dictionary<ValueTuple<int, int>, List<Square>> StopCheckWithPiece { get; set; } = new();
+        public Dictionary<(int x, int y), List<(int validX, int validY)>> StopCheckWithPiece { get; set; } = new();
 
         public int MovePawnTowardsBlackOrWhite { get; set; } = -1;
 
@@ -143,12 +143,12 @@ namespace WinFormsApp1
 
             if (IsSquareOutsideTheBoard((pawn.x, destinationRank))) return;
 
-            if (IsSquareNull((pawn.x, destinationRank))) ValidMoves.Add(new Square(pawn.x, destinationRank));
+            if (IsSquareNull((pawn.x, destinationRank))) ValidMoves.Add((pawn.x, destinationRank));
 
             for (int x = pawn.x - 1; x < pawn.x + 2; x += 2)
             {
                 if (IsSquareOutsideTheBoard((x, destinationRank))) continue;
-                ValidMoves.Add(new Square(x, destinationRank));
+                ValidMoves.Add((x, destinationRank));
             }
 
             int destinationRankOfFirstPawnMove = pawn.y + movePawnTowardsBlackOrWhite * 2;
@@ -158,7 +158,7 @@ namespace WinFormsApp1
                 !IsSquareNull((pawn.x, destinationRankOfFirstPawnMove))) 
                 return;
 
-            ValidMoves.Add(new Square(pawn.x, destinationRankOfFirstPawnMove));
+            ValidMoves.Add((pawn.x, destinationRankOfFirstPawnMove));
         }
 
 
@@ -176,7 +176,7 @@ namespace WinFormsApp1
 
             if (!string.IsNullOrEmpty(direction))
             {
-                ValueTuple<int, int> incrementForNextSquare = linearDirections.First(storedDirection => storedDirection.Item1 == direction).Item2;
+                ValueTuple<int, int> incrementForNextSquare = linearDirections.First(storedDirection => storedDirection.direction == direction).moveBy;
                 CalculateLinearDirections(piece, incrementForNextSquare, times);
                 return;
             }
@@ -187,28 +187,28 @@ namespace WinFormsApp1
             int endingIndexForDirections = (piece.Name == "R") ? NUMBER_OF_DIRECTIONS / 2 : NUMBER_OF_DIRECTIONS;
 
             for (int i = startingIndexForDirections; i < endingIndexForDirections; i++)
-                CalculateLinearDirections(piece, linearDirections[i].Item2, times);
+                CalculateLinearDirections(piece, linearDirections[i].moveBy, times);
         }
 
 
-        private void CalculateLinearDirections(Piece piece, ValueTuple<int, int> incrementForNextSquare, int times)
+        private void CalculateLinearDirections(Piece piece, (int x, int y) incrementForNextSquare, int times)
         {
             int destinationX = piece.x, destinationY = piece.y;
 
             for (int i = 0; i < times; i++)
             {
-                destinationX += incrementForNextSquare.GetX();
-                destinationY += incrementForNextSquare.GetY();
+                destinationX += incrementForNextSquare.x;
+                destinationY += incrementForNextSquare.y;
 
                 if (IsSquareOutsideTheBoard((destinationX, destinationY))) return;
 
                 if (!IsSquareNull((destinationX, destinationY)))
                 {
-                    ValidMoves.Add(new Square(destinationX, destinationY));
+                    ValidMoves.Add((destinationX, destinationY));
                     return;
                 }
 
-                ValidMoves.Add(new Square(destinationX, destinationY));
+                ValidMoves.Add((destinationX, destinationY));
             }
         }
 
@@ -221,21 +221,21 @@ namespace WinFormsApp1
                 int newX = piece.x + move.x;
                 int newY = piece.y + move.y;
 
-                if (!IsSquareOutsideTheBoard((newX, newY))) ValidMoves.Add(new Square(newX, newY));
+                if (!IsSquareOutsideTheBoard((newX, newY))) ValidMoves.Add((newX, newY));
             }                
         }
 
 
-        public static bool IsSquareOutsideTheBoard(ValueTuple<int, int> destinationSquare)
+        public static bool IsSquareOutsideTheBoard((int x, int y) destinationSquare)
         {
-            return (destinationSquare.GetX() < 0 || destinationSquare.GetX() >= BOARD_SIZE ||
-                    destinationSquare.GetY() < 0 || destinationSquare.GetY() >= BOARD_SIZE);
+            return (destinationSquare.x < 0 || destinationSquare.x >= BOARD_SIZE ||
+                    destinationSquare.y < 0 || destinationSquare.y >= BOARD_SIZE);
         }
 
 
-        public bool IsSquareNull(ValueTuple<int, int> destinationSquare)
+        public bool IsSquareNull((int x, int y) destinationSquare)
         {
-            return (board[destinationSquare.GetY(), destinationSquare.GetX()] == null);
+            return (board[destinationSquare.y, destinationSquare.x] == null);
         }
 
 
@@ -259,7 +259,7 @@ namespace WinFormsApp1
                 Debug.Write($"Key: ({kvp.Key.Item1}, {kvp.Key.Item2}), Squares: ");
 
                 foreach (var square in kvp.Value)
-                    Debug.Write($"{square.x}, {square.y} ");
+                    Debug.Write($"{square.validX}, {square.validY} ");
 
                 Debug.Write('\n');
             }
