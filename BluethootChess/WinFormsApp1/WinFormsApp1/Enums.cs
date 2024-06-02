@@ -37,4 +37,17 @@ namespace WinFormsApp1
         SeventhFile,
         EighthFile
     };
+
+
+    public enum Directions
+    {
+        Left,
+        Right,
+        Up,
+        Down,
+        LeftDown,
+        LeftUp,
+        RightDown,
+        RightUp,
+    }
 }

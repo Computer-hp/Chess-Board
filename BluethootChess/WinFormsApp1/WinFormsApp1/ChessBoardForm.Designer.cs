@@ -64,7 +64,7 @@
                     {
                         Size = new Size(SQUARE_SIZE, SQUARE_SIZE),
                         Location = new Point(centerX + col * SQUARE_SIZE, centerY + row * SQUARE_SIZE),
-                        BackColor = (row + col) % 2 == 0 ? Color.Ivory : Color.Brown,
+                        BackColor = (row + col) % 2 == 0 ? Color.Ivory : Color.Peru,
                         FlatStyle = FlatStyle.Flat,
                         FlatAppearance = { BorderSize = 0 },
                         BackgroundImageLayout = ImageLayout.Zoom,

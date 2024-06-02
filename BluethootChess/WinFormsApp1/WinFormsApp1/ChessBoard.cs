@@ -19,17 +19,18 @@ namespace WinFormsApp1
         private const int NUMBER_OF_DIRECTIONS = 8;
 
         private Piece[,] board;
-           
-        private static readonly (string direction, (int x, int y) moveBy)[] linearDirections =
+
+        private static readonly (Directions direction, (int x, int y) moveBy)[] linearDirections =
         {
-            ( "Up",         (0, 1) ),
-            ( "Down",       (0, -1) ),
-            ( "Right",      (1, 0) ),
-            ( "Left",       (-1, 0) ),
-            ( "RightUp",    (1, 1) ),
-            ( "RightDown",  (1, -1) ),
-            ( "LeftUp",     (-1, 1) ),
-            ( "LeftDown",   (-1, -1) )
+            ( Directions.Left,       (-1, 0)  ),
+            ( Directions.Right,      (1, 0)   ),
+            ( Directions.Up,         (0, 1)   ),
+            ( Directions.Down,       (0, -1)  ),
+
+            ( Directions.LeftDown,   (-1, -1) ),
+            ( Directions.LeftUp,     (-1, 1)  ),
+            ( Directions.RightUp,    (1, 1)   ),
+            ( Directions.RightDown,  (1, -1)  ),
         };
 
         private static readonly (int x, int y)[] knightMoves = 
@@ -72,13 +73,14 @@ namespace WinFormsApp1
             return GetEnumerator();
         }
 
+        /*
         public ref Piece GetPieceRef(int y, int x)
         {
             if (IsSquareOutsideTheBoard((x, y))) throw new IndexOutOfRangeException();
 
             return ref board[y, x];
         }
-         
+        */ 
 
 
         public ChessBoard()
@@ -111,7 +113,7 @@ namespace WinFormsApp1
         }
 
 
-        public void CalculateMoves(Piece piece, string direction)
+        public void CalculateMoves(Piece piece, Directions? direction = null)
         {
             ValidMoves.Clear();
 
@@ -170,11 +172,11 @@ namespace WinFormsApp1
 
 
 
-        private void ManageLinearDirections(Piece piece, string direction)
+        private void ManageLinearDirections(Piece piece, Directions? direction)
         {
             int times = (piece.Name == "K") ? 1 : BOARD_SIZE;
 
-            if (!string.IsNullOrEmpty(direction))
+            if (direction == null)
             {
                 ValueTuple<int, int> incrementForNextSquare = linearDirections.First(storedDirection => storedDirection.direction == direction).moveBy;
                 CalculateLinearDirections(piece, incrementForNextSquare, times);
