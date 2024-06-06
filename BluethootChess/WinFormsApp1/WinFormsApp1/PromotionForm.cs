@@ -12,12 +12,12 @@ namespace WinFormsApp1
 {
     public partial class PromotionForm : Form
     {
-        public string Name { get; set; }
+        public char PromotedPieceName { get; set; }
 
         private const int BUTTON_WIDTH = ChessBoardForm.SQUARE_SIZE;
         private const int BUTTON_HEIGHT = ChessBoardForm.SQUARE_SIZE;
 
-        private static readonly string[] promotionPiecesName = { "Q", "R", "B", "N" };  // better to use a char[]
+        private static readonly char[] promotionPiecesName = { 'Q', 'R', 'B', 'N' };  // better to use a char[]
 
 
         public PromotionForm(int turn)
@@ -40,7 +40,7 @@ namespace WinFormsApp1
         private void Piece_Promote(object sender, EventArgs e)
         {
             Button button = (Button)sender;
-            Name = button.Name;
+            PromotedPieceName = button.Name[0];
             this.Close();
         }
     }

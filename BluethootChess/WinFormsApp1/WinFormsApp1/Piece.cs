@@ -10,11 +10,11 @@ namespace WinFormsApp1
     {
         public int x {  get; set; }
         public int y { get; set; }
-        public string Name { get; }
+        public char Name { get; }
         public PieceColor Color { get; }
 
 
-        public Piece(int x, int y, string Name, PieceColor Color)
+        public Piece(int x, int y, char Name, PieceColor Color)
         {
             this.x = x;
             this.y = y;

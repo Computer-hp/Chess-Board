@@ -49,5 +49,5 @@ namespace WinFormsApp1
         LeftUp,
         RightDown,
         RightUp,
-    }
+    };
 }

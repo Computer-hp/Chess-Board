@@ -95,7 +95,7 @@ namespace WinFormsApp1
 
         public void InitializePieces()
         {
-            string[] pieces = { "R", "N", "B", "Q", "K", "B", "N", "R" };
+            char[] pieces = { 'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R' };
 
             int firstRank = (int)Ranks.FirstRank;
             int secondRank = (int)Ranks.SecondRank;
@@ -104,10 +104,10 @@ namespace WinFormsApp1
 
             for (int x = 0; x < BOARD_SIZE; x++)
             {
-                board[secondRank, x] = new Piece(x, secondRank, "P", PieceColor.White);
+                board[secondRank, x] = new Piece(x, secondRank, 'P', PieceColor.White);
                 board[firstRank, x] = new Piece(x, firstRank, pieces[x], PieceColor.White);
 
-                board[seventhRank, x] = new Piece(x, seventhRank, "P", PieceColor.Black);
+                board[seventhRank, x] = new Piece(x, seventhRank, 'P', PieceColor.Black);
                 board[eightRank, x] = new Piece(x, eightRank, pieces[x], PieceColor.Black);
             }
         }
@@ -119,11 +119,11 @@ namespace WinFormsApp1
 
             switch (piece.Name)
             {
-                case "P":
+                case 'P':
                     PawnMoves(piece);
                     return;
 
-                case "N":
+                case 'N':
                     KnightMoves(piece);
                     return;
             }
@@ -174,7 +174,7 @@ namespace WinFormsApp1
 
         private void ManageLinearDirections(Piece piece, Directions? direction)
         {
-            int times = (piece.Name == "K") ? 1 : BOARD_SIZE;
+            int times = (piece.Name == 'K') ? 1 : BOARD_SIZE;
 
             if (direction == null)
             {
@@ -183,10 +183,10 @@ namespace WinFormsApp1
                 return;
             }
 
-            int startingIndexForDirections = (piece.Name == "R") ? 0 
-                                             : (piece.Name == "B") ? 4 : 0;
+            int startingIndexForDirections = (piece.Name == 'R') ? 0 
+                                             : (piece.Name == 'B') ? 4 : 0;
 
-            int endingIndexForDirections = (piece.Name == "R") ? NUMBER_OF_DIRECTIONS / 2 : NUMBER_OF_DIRECTIONS;
+            int endingIndexForDirections = (piece.Name == 'R') ? NUMBER_OF_DIRECTIONS / 2 : NUMBER_OF_DIRECTIONS;
 
             for (int i = startingIndexForDirections; i < endingIndexForDirections; i++)
                 CalculateLinearDirections(piece, linearDirections[i].moveBy, times);
