@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 // class Piece. After a piece is moved i have to control wheather
 // the piece has pinned an opponents piece.
 
-namespace WinFormsApp1
+namespace ChessGame
 {
     public class Piece
     {

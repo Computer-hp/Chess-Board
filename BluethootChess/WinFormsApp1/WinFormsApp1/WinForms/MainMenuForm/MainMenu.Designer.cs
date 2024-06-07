@@ -32,20 +32,22 @@
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainMenu));
             SuspendLayout();
             // 
             // MainMenu
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(10F, 19F);
             AutoScaleMode = AutoScaleMode.Font;
+            BackColor = Color.RosyBrown;
             ClientSize = new Size(384, 261);
+            Font = new Font("Arial", 12F, FontStyle.Bold, GraphicsUnit.Point);
+            ForeColor = Color.White;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "MainMenu";
+            StartPosition = FormStartPosition.CenterScreen;
             Text = "MainMenu";
             ResumeLayout(false);
-            StartPosition = FormStartPosition.CenterScreen;
-            BackColor = Color.RosyBrown;
-            ForeColor = Color.White;
-            Font = new Font("Arial", 12, FontStyle.Bold);
         }
 
         private void InitializeMainMenuButtons()

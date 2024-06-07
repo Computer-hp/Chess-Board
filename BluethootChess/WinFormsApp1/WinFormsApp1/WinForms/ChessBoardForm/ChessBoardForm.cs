@@ -18,11 +18,15 @@ using System.Numerics;
 using System.Diagnostics.CodeAnalysis;
 using System.Transactions;
 using System.Runtime.Serialization;
+using WindowHelper;
+using ChessGame;
 
 
 // TODO  Pin on pieces
 // checkmate doesn't work for the knight
 // FIX: king is able to move in the same direction as the one of the piece that has given check
+// this is because the CalculateMoves method calculates the moves until the position of the king.
+// if there are squares after the king, it should not be able to move.
 
 namespace WinFormsApp1
 {
@@ -74,6 +78,7 @@ namespace WinFormsApp1
             InitializeChessBoardFormButtons();
             InitializeChessBoardFormTimers();
             InitializeTimers();
+            DarkThemeWindowBodyHelper.ApplyDarkTheme(this);
         }
 
 
@@ -350,7 +355,7 @@ namespace WinFormsApp1
 
             chessBoard.ValidMoves.Add((destinationSquare.x, destinationSquare.y));  // piece that gives check can also be captured
                                                                                  // to stop check (neccessary for Knight and Pawn)
-            Debug.WriteLine("\ncheck = " + isCheck + '\n');
+            Debug.WriteLine($"\n\n******* IS CHECK = {isCheck} *******\n");
             return isCheck = IsCheck(kingPosition);
         }
 
@@ -365,8 +370,6 @@ namespace WinFormsApp1
 
         private void HandleSituationAfterCheck(Piece king)
         {
-            Debug.WriteLine("CHECK\n");
-
             chessBoard.CopyMoves.Clear();
             chessBoard.CopyMoves.AddRange(chessBoard.ValidMoves);
 
@@ -379,10 +382,7 @@ namespace WinFormsApp1
                 
                 chessBoard.CalculateMoves(piece);
 
-                if (piece.Name == 'P')
-                    // should also remove the 2 squares in front of the pawn. --> create a method to do that because it's done several times
-                    // still works because when moving the king something controls the 2 squares!
-                    ManageInvalidDiagonalPawnMoves(piece);
+                if (piece.Name == 'P') ManageInvalidDiagonalPawnMoves(piece);
 
                 RemoveSquaresFromList(chessBoard.ValidMoves, (king.X, king.Y));
                 StopCheck(piece);
@@ -546,11 +546,9 @@ namespace WinFormsApp1
 
         private void CheckPiecesNearKing(Piece king)
         {
-            for (int x = king.X - 1; x < king.X + 2; x++)
-                for (int y = king.Y - 1; y < king.Y + 2; y++)
-
-                    if (!ChessBoard.IsSquareOutsideTheBoard((x, y)) &&
-                        !chessBoard.IsSquareNull((x, y)))
+            for (int x = king.X - 1; x < (king.X + 2); x++)
+                for (int y = king.Y - 1; y < (king.Y + 2); y++)
+                    if (!ChessBoard.IsSquareOutsideTheBoard((x, y)) && !chessBoard.IsSquareNull((x, y)))
                         FindInvalidCapturesKing(king, chessBoard[y, x]);
         }
 
@@ -579,7 +577,6 @@ namespace WinFormsApp1
                     (piece.X == pieceNearKing.X && piece.Y == pieceNearKing.Y) ||
                     piece.Color != pieceNearKing.Color)
                     continue;
-                
 
                 chessBoard.CalculateMoves(piece);
 
@@ -588,9 +585,6 @@ namespace WinFormsApp1
                     RemoveSquaresFromList(tmpKingMoves, (pieceNearKing.X, pieceNearKing.Y));
                     break;
                 }
-                
-                if (piece.X == 2 && piece.Y == 4)
-                    Console.Write("\nTarget\n");
             }
 
             chessBoard.ValidMoves.Clear();

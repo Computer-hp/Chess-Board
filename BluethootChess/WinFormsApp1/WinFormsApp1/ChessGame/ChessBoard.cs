@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 
 
-namespace WinFormsApp1
+namespace ChessGame
 {
     public class ChessBoard : IEnumerable<Piece>
     {
@@ -23,15 +23,15 @@ namespace WinFormsApp1
 
         private static readonly (Directions direction, (int x, int y) moveBy)[] linearDirections =
         {
-            ( Directions.Left,       (-1, 0)  ),
-            ( Directions.Right,      (1, 0)   ),
-            ( Directions.Up,         (0, -1)   ),
-            ( Directions.Down,       (0, 1)  ),
+            ( Directions.Left,       (-1, 0) ),
+            ( Directions.Right,      (1, 0) ),
+            ( Directions.Up,         (0, -1) ),
+            ( Directions.Down,       (0, 1) ),
 
             ( Directions.LeftDown,   (-1, 1) ),
-            ( Directions.LeftUp,     (-1, -1)  ),
-            ( Directions.RightUp,    (1, -1)   ),
-            ( Directions.RightDown,  (1, 1)  ),
+            ( Directions.LeftUp,     (-1, -1) ),
+            ( Directions.RightUp,    (1, -1) ),
+            ( Directions.RightDown,  (1, 1) ),
         };
 
         private static readonly (int x, int y)[] knightMoves = 
@@ -216,7 +216,6 @@ namespace WinFormsApp1
         }
 
 
-        // knight is able to move when check
         private void KnightMoves(Piece piece)
         {
             foreach (var move in knightMoves)

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WindowHelper;
 
 namespace WinFormsApp1
 {
@@ -22,6 +23,7 @@ namespace WinFormsApp1
         {
             InitializeComponent();
             InitializeMainMenuButtons();
+            DarkThemeWindowBodyHelper.ApplyDarkTheme(this);
         }
 
 

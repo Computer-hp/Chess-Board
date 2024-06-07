@@ -1,4 +1,6 @@
-﻿namespace WinFormsApp1
+﻿using ChessGame;
+
+namespace WinFormsApp1
 {
     partial class PromotionForm
     {
