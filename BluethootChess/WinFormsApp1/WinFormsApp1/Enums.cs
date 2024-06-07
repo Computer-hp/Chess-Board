@@ -28,14 +28,14 @@ namespace WinFormsApp1
 
     public enum Files
     {
-        FirstFile,
-        SecondFile,
-        ThirdFile,
-        FourthFile,
-        FifthFile,
-        SixthFile,
-        SeventhFile,
-        EighthFile
+        aFile,
+        bFile,
+        cFile,
+        dFile,
+        eFile,
+        fFile,
+        gFile,
+        hFile
     };
 
 

@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
+
 namespace WinFormsApp1
 {
     public class ChessBoard : IEnumerable<Piece>
@@ -24,13 +25,13 @@ namespace WinFormsApp1
         {
             ( Directions.Left,       (-1, 0)  ),
             ( Directions.Right,      (1, 0)   ),
-            ( Directions.Up,         (0, 1)   ),
-            ( Directions.Down,       (0, -1)  ),
+            ( Directions.Up,         (0, -1)   ),
+            ( Directions.Down,       (0, 1)  ),
 
-            ( Directions.LeftDown,   (-1, -1) ),
-            ( Directions.LeftUp,     (-1, 1)  ),
-            ( Directions.RightUp,    (1, 1)   ),
-            ( Directions.RightDown,  (1, -1)  ),
+            ( Directions.LeftDown,   (-1, 1) ),
+            ( Directions.LeftUp,     (-1, -1)  ),
+            ( Directions.RightUp,    (1, -1)   ),
+            ( Directions.RightDown,  (1, 1)  ),
         };
 
         private static readonly (int x, int y)[] knightMoves = 
@@ -141,33 +142,33 @@ namespace WinFormsApp1
         private void PawnMoves(Piece pawn)
         {
             int movePawnTowardsBlackOrWhite = (pawn.Color == PieceColor.White) ? -1 : 1;
-            int destinationRank = pawn.y + movePawnTowardsBlackOrWhite;
+            int destinationRank = pawn.Y + movePawnTowardsBlackOrWhite;
 
-            if (IsSquareOutsideTheBoard((pawn.x, destinationRank))) return;
+            if (IsSquareOutsideTheBoard((pawn.X, destinationRank))) return;
 
-            if (IsSquareNull((pawn.x, destinationRank))) ValidMoves.Add((pawn.x, destinationRank));
+            if (IsSquareNull((pawn.X, destinationRank))) ValidMoves.Add((pawn.X, destinationRank));
 
-            for (int x = pawn.x - 1; x < pawn.x + 2; x += 2)
+            for (int x = pawn.X - 1; x < pawn.X + 2; x += 2)
             {
                 if (IsSquareOutsideTheBoard((x, destinationRank))) continue;
                 ValidMoves.Add((x, destinationRank));
             }
 
-            int destinationRankOfFirstPawnMove = pawn.y + movePawnTowardsBlackOrWhite * 2;
+            int destinationRankOfFirstPawnMove = pawn.Y + movePawnTowardsBlackOrWhite * 2;
 
             if (!IsPawnBeingMovedForTheFirstTime(pawn) ||
-                IsSquareOutsideTheBoard((pawn.x, destinationRankOfFirstPawnMove)) ||
-                !IsSquareNull((pawn.x, destinationRankOfFirstPawnMove))) 
+                IsSquareOutsideTheBoard((pawn.X, destinationRankOfFirstPawnMove)) ||
+                !IsSquareNull((pawn.X, destinationRankOfFirstPawnMove))) 
                 return;
 
-            ValidMoves.Add((pawn.x, destinationRankOfFirstPawnMove));
+            ValidMoves.Add((pawn.X, destinationRankOfFirstPawnMove));
         }
 
 
         private static bool IsPawnBeingMovedForTheFirstTime(Piece piece)
         {
-            return ((piece.Color == PieceColor.White && piece.y == (int)Ranks.SecondRank) ||
-                    (piece.Color == PieceColor.Black && piece.y == (int)Ranks.SeventhRank));
+            return ((piece.Color == PieceColor.White && piece.Y == (int)Ranks.SecondRank) ||
+                    (piece.Color == PieceColor.Black && piece.Y == (int)Ranks.SeventhRank));
         }
 
 
@@ -176,7 +177,7 @@ namespace WinFormsApp1
         {
             int times = (piece.Name == 'K') ? 1 : BOARD_SIZE;
 
-            if (direction == null)
+            if (direction is not null)
             {
                 ValueTuple<int, int> incrementForNextSquare = linearDirections.First(storedDirection => storedDirection.direction == direction).moveBy;
                 CalculateLinearDirections(piece, incrementForNextSquare, times);
@@ -195,7 +196,7 @@ namespace WinFormsApp1
 
         private void CalculateLinearDirections(Piece piece, (int x, int y) incrementForNextSquare, int times)
         {
-            int destinationX = piece.x, destinationY = piece.y;
+            int destinationX = piece.X, destinationY = piece.Y;
 
             for (int i = 0; i < times; i++)
             {
@@ -220,8 +221,8 @@ namespace WinFormsApp1
         {
             foreach (var move in knightMoves)
             {
-                int newX = piece.x + move.x;
-                int newY = piece.y + move.y;
+                int newX = piece.X + move.x;
+                int newY = piece.Y + move.y;
 
                 if (!IsSquareOutsideTheBoard((newX, newY))) ValidMoves.Add((newX, newY));
             }                

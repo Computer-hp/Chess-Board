@@ -4,22 +4,27 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
+// For the pin i was thinking about adding a new property (bool) to the
+// class Piece. After a piece is moved i have to control wheather
+// the piece has pinned an opponents piece.
+
 namespace WinFormsApp1
 {
     public class Piece
     {
-        public int x {  get; set; }
-        public int y { get; set; }
+        public int X {  get; set; }
+        public int Y { get; set; }
         public char Name { get; }
         public PieceColor Color { get; }
 
 
-        public Piece(int x, int y, char Name, PieceColor Color)
+        public Piece(int x, int y, char name, PieceColor color)
         {
-            this.x = x;
-            this.y = y;
-            this.Name = Name;
-            this.Color = Color;
+            X = x;
+            Y = y;
+            Name = name;
+            Color = color;
         }
     }
 }
