@@ -24,9 +24,10 @@ using ChessGame;
 
 // TODO  Pin on pieces
 // checkmate doesn't work for the knight
+
 // FIX: king is able to move in the same direction as the one of the piece that has given check
-// this is because the CalculateMoves method calculates the moves until the position of the king.
-// if there are squares after the king, it should not be able to move.
+//      this is because the CalculateMoves method calculates the moves until the position of the king.
+//      if there are squares after the king, it should not be able to move.
 
 namespace WinFormsApp1
 {
@@ -78,14 +79,14 @@ namespace WinFormsApp1
             InitializeChessBoardFormButtons();
             InitializeChessBoardFormTimers();
             InitializeTimers();
-            DarkThemeWindowBodyHelper.ApplyDarkTheme(this);
+            DarkThemeWindowHelper.ApplyDarkTheme(this);
         }
 
 
         private static string GetProjectPath()
         {
             string appDirectory = Application.StartupPath;
-            string imagesFolder = Path.GetFullPath(Path.Combine(appDirectory, "..\\..\\..\\..\\images\\"));
+            string imagesFolder = Path.GetFullPath(Path.Combine(appDirectory, "..\\..\\..\\Assets\\"));
             return imagesFolder;
         }
 

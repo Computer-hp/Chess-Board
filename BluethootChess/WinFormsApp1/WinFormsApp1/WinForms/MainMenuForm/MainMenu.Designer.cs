@@ -39,7 +39,6 @@
             // 
             AutoScaleDimensions = new SizeF(10F, 19F);
             AutoScaleMode = AutoScaleMode.Font;
-            BackColor = Color.RosyBrown;
             ClientSize = new Size(384, 261);
             Font = new Font("Arial", 12F, FontStyle.Bold, GraphicsUnit.Point);
             ForeColor = Color.White;
@@ -63,8 +62,8 @@
                 Left = (formWidth - buttonWidth) / 2,
                 Top = (formHeight - buttonHeight) / 2 - 70,
 
-                BackColor = Color.PaleGreen,
-                ForeColor = Color.Black,
+                BackColor = Color.Peru,
+                ForeColor = Color.White,
                 Font = new Font("Arial", 12, FontStyle.Bold)
             };
 
@@ -76,8 +75,8 @@
                 Left = (formWidth - buttonWidth) / 2,
                 Top = (formHeight - buttonHeight) / 2 + 70,
 
-                BackColor = Color.PaleGreen,
-                ForeColor = Color.Black,
+                BackColor = Color.Peru,
+                ForeColor = Color.White,
                 Font = new Font("Arial", 12, FontStyle.Bold)
             };
 
@@ -89,8 +88,8 @@
                 Left = formWidth - 90,
                 Top = formHeight - 50,
 
-                BackColor = Color.PaleGreen,
-                ForeColor = Color.Black,
+                BackColor = Color.Peru,
+                ForeColor = Color.White,
                 Font = new Font("Arial", 11, FontStyle.Bold)
             };
 

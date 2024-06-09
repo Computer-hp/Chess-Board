@@ -23,9 +23,8 @@ namespace WinFormsApp1
         {
             InitializeComponent();
             InitializeMainMenuButtons();
-            DarkThemeWindowBodyHelper.ApplyDarkTheme(this);
+            DarkThemeWindowHelper.ApplyDarkTheme(this);
         }
-
 
 
         private void Create_ChessBoard(object? sender, EventArgs e)

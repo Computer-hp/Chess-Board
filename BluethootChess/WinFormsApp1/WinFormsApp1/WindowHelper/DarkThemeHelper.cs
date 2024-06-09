@@ -40,13 +40,12 @@ namespace WindowHelper
     }
 
 
-    public static class DarkThemeWindowBodyHelper
+    public static class DarkThemeWindowHelper
     {
         public static void ApplyDarkTheme(Form window)
         {
             DarkThemeTitleBarHelper.UseImmersiveDarkMode(window.Handle, true);
-            window.BackColor = Color.FromArgb(30, 30, 30);
-
+            window.BackColor = Color.FromArgb(45, 45, 45);
             window.ForeColor = Color.White;
         }
     }

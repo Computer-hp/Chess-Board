@@ -43,6 +43,7 @@
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(chessBoardFormSize + 200, chessBoardFormSize + 50);
             Icon = (Icon)resources.GetObject("$this.Icon");
+            Text = "Chess Game";
             Name = "ChessBoardForm";
             Load += Form1_Load;
             ResumeLayout(false);
