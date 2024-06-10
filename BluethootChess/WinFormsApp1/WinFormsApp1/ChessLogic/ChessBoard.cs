@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 
 
-namespace ChessGame
+namespace ChessLogic
 {
     public class ChessBoard : IEnumerable<Piece>
     {

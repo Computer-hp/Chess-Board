@@ -1,4 +1,4 @@
-﻿using ChessGame;
+﻿using ChessLogic;
 
 namespace WinFormsApp1
 {

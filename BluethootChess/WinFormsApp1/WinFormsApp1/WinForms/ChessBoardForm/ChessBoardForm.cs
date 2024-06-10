@@ -1,25 +1,7 @@
-using System;
-using System.Xml.Linq;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 using System.Diagnostics;
-using System.Diagnostics.Eventing.Reader;
-using System.Collections.Generic;
-using System.Collections;
-using Microsoft.VisualBasic.ApplicationServices;
-using System.Configuration;
-using System.Net.NetworkInformation;
-using Microsoft.VisualBasic.Devices;
-using System.Runtime.CompilerServices;
-using System.Reflection;
-using System.Windows.Forms;
-using System.Diagnostics.Metrics;
 using Timer = System.Windows.Forms.Timer;
-using System.Numerics;
-using System.Diagnostics.CodeAnalysis;
-using System.Transactions;
-using System.Runtime.Serialization;
 using WindowHelper;
-using ChessGame;
+using ChessLogic;
 
 
 // TODO  Pin on pieces
