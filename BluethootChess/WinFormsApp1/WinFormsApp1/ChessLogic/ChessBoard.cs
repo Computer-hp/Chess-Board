@@ -63,6 +63,22 @@ namespace ChessLogic
             }
         }
 
+
+        public Piece this[(int x, int y) destSquare]
+        {
+            get 
+            {
+                if (IsSquareOutsideTheBoard((destSquare.x, destSquare.y))) throw new IndexOutOfRangeException();
+                return board[destSquare.y, destSquare.x]; 
+            }
+            set 
+            { 
+                if (IsSquareOutsideTheBoard((destSquare.x, destSquare.y))) throw new IndexOutOfRangeException();
+                board[destSquare.y, destSquare.x] = value; 
+            }
+        }
+
+
         public IEnumerator<Piece> GetEnumerator()
         {
             foreach (Piece piece in board)
