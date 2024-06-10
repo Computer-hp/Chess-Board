@@ -282,7 +282,9 @@ namespace WinFormsApp1
 
         private void ManageSituationAfterPieceMovement((int x, int y) destinationSquare)
         {
-            if (chessBoard[destinationSquare.y, destinationSquare.x].Name == 'K')
+            var lastMovedPiece = chessBoard[destinationSquare.y, destinationSquare.x];
+
+            if (lastMovedPiece.Name == 'K')
                 return;
 
             Piece? king = FindKing(); // maybe it's better to keep track of white & black king by creating 2 obj.
@@ -290,7 +292,10 @@ namespace WinFormsApp1
             if (!HasPieceGivenCheck((king!.X, king!.Y), destinationSquare))
                 return;
 
-            HandleSituationAfterCheck(king);
+            if (lastMovedPiece.Name == 'P')
+                chessBoard.ValidMoves.RemoveAll(square => square.y == lastMovedPiece.Y + chessBoard.MovePawnTowardsBlackOrWhite);
+
+            ManageSituationAfterCheck(king);
 
             if (!IsCheckmate())
                 return;
@@ -356,8 +361,9 @@ namespace WinFormsApp1
 
             chessBoard.ValidMoves.Add((destinationSquare.x, destinationSquare.y));  // piece that gives check can also be captured
                                                                                  // to stop check (neccessary for Knight and Pawn)
+            isCheck = IsCheck(kingPosition);
             Debug.WriteLine($"\n\n******* IS CHECK = {isCheck} *******\n");
-            return isCheck = IsCheck(kingPosition);
+            return isCheck;
         }
 
 
@@ -369,9 +375,10 @@ namespace WinFormsApp1
         }
 
 
-        private void HandleSituationAfterCheck(Piece king)
+        private void ManageSituationAfterCheck(Piece king)
         {
             chessBoard.CopyMoves.Clear();
+            
             chessBoard.CopyMoves.AddRange(chessBoard.ValidMoves);
 
             foreach (var piece in chessBoard)
@@ -507,7 +514,6 @@ namespace WinFormsApp1
 
 
 
-        // TODO remove also c1 or g1 square in case of O_O or O_O_O
         private void RemoveInvalidSquaresOfKing(Piece king)
         {
             List<(int x, int y)> tmpKingMoves = new();
