@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ChessLogic;
 using WinFormsApp1;
+using Events;
 
 namespace ChessGame
 {
@@ -13,15 +14,11 @@ namespace ChessGame
     {
         private const int BOARD_SIZE = 8;
         private const int N_PLAYERS = 2;
-        public const int SQUARE_SIZE = 70;
-
-        private int turn = 0;       // 0 for white, 1 for black
+        public const int  SQUARE_SIZE = 70;
 
         private int[] secondsElapsed = new int[N_PLAYERS];
 
-
-        private bool isFirstMovePlayed = false;
-        private bool isCheck = false;
+        private bool   isCheck = false;
         private bool[] isKingFirstMove = { false, false };
         private bool[] isRook_A_FirstMove = { false, false };
         private bool[] isRook_H_FirstMove = { false, false };
@@ -36,6 +33,13 @@ namespace ChessGame
 
         private static readonly char[] piecesThatMoveStraight = { 'R', 'Q' };
         private static readonly char[] piecesThatMoveDiagonally = { 'B', 'Q' };
+
+        public int Turn { get; private set; } = 0;       // 0 for white, 1 for black
+        public int MovePawnTowardsBlackOrWhite { get; private set; } = -1;
+        public bool IsFirstMovePlayed { get; set; } = false;
+
+        public event EventHandler<CastleEventArgs> Castle;
+        public event EventHandler<CheckmateEventArgs> Checkmate;
 
 
         public Game()
@@ -54,7 +58,7 @@ namespace ChessGame
             // there was ManageClickedButton to eventualy change the color of the button.
 
             int firstRank = (int)Ranks.FirstRank;
-            int backRank = Math.Abs((int)currentPlayer[turn] * firstRank - firstRank);
+            int backRank = Math.Abs((int)currentPlayer[Turn] * firstRank - firstRank);
 
             if (selectedPiece is null)
             {
@@ -92,10 +96,10 @@ namespace ChessGame
            
         // final things to do
         // ###
-            chessBoard.MovePawnTowardsBlackOrWhite = -1 * (turn * 2 - 1);  
+            chessBoard.MovePawnTowardsBlackOrWhite = -1 * (Turn * 2 - 1);  
             chessBoard.ValidMoves.Clear();
             //lastClickedButton.BackColor = (Color)previousButtonColor!;
-            turn = (turn + 1) % 2;
+            Turn = (Turn + 1) % 2;
             selectedPiece = null;
             //lastClickedButton = null;
         // ###
@@ -107,7 +111,7 @@ namespace ChessGame
         private bool PieceGotClicked(Piece clickedSquare)
         {
             return clickedSquare is not null && 
-                   clickedSquare.Color == currentPlayer[turn];
+                   clickedSquare.Color == currentPlayer[Turn];
         }
         
 
@@ -129,9 +133,9 @@ namespace ChessGame
 
             RemoveInvalidSquaresOfKing(selectedPiece);
                                                                 //   secondfile         fifthfile
-            if (!O_O_O[turn])  O_O_O[turn] = IsCastleLegal((int)Files.bFile, (int)Files.eFile, backRank, isRook_A_FirstMove[turn]);
+            if (!O_O_O[Turn])  O_O_O[Turn] = IsCastleLegal((int)Files.bFile, (int)Files.eFile, backRank, isRook_A_FirstMove[Turn]);
     //                                                                sixthfile             eighthfile
-            if (!O_O[turn])  O_O[turn] = IsCastleLegal((int)Files.fFile, (int)Files.hFile, backRank, isRook_H_FirstMove[turn]);
+            if (!O_O[Turn])  O_O[Turn] = IsCastleLegal((int)Files.fFile, (int)Files.hFile, backRank, isRook_H_FirstMove[Turn]);
 
             Debug.WriteLine("king moves:");
             Debug.WriteLine(chessBoard.ToString() + "\n");
@@ -178,7 +182,7 @@ namespace ChessGame
             chessBoard[destinationSquare.y, destinationSquare.x] = new Piece(destinationSquare.x, destinationSquare.y, 
                                                                              selectedPiece.Name, selectedPiece.Color);
 
-            if (selectedPiece.Name == 'K' && !isKingFirstMove[turn])
+            if (selectedPiece.Name == 'K' && !isKingFirstMove[Turn])
                 ManageFirstKingMove(destinationSquare, backRank);
 
             else if (selectedPiece.Name == 'R')
@@ -203,15 +207,16 @@ namespace ChessGame
 
             ManageSituationAfterCheck(king);
 
-            if (!IsCheckmate())
+            if (!IsCheckmate()) // should also add Draw
                 return;
 
-            var popUp = new RestartForm { StartPosition = FormStartPosition.CenterParent };
-            popUp.ShowDialog(this);
+            OnCheckmate(new CheckmateEventArgs(currentPlayer[Turn].ToString()));
+        }
 
-            if (RestartForm.NewGame) isRestarted = true;
 
-            else if (RestartForm.MainMenu) this.Close();
+        protected virtual void OnCheckmate(CheckmateEventArgs e)
+        {
+            Checkmate?.Invoke(this, e);
         }
         
 
@@ -336,7 +341,7 @@ namespace ChessGame
 
         private bool IsCastleLegal(int startingFile, int endingFile, int backRank, bool isRookFirstMove)
         {
-            if (isKingFirstMove[turn] || isRookFirstMove) return false;
+            if (isKingFirstMove[Turn] || isRookFirstMove) return false;
 
             var king = selectedPiece;
 
@@ -483,52 +488,58 @@ namespace ChessGame
 
 
 
-        private void ManageShortOrLongCastle(int previousRookX, int backRank)
+        private void ManageShortOrLongCastle((int x, int y) kingDestSquare, int previousRookX, int backRank)
         {
-            var tmpRook = chessBoard[backRank, previousRookX];  // copies the rook
+            (int x, int y) previousRookPosition = (previousRookX, backRank);
+            ManageFirstRookMove(previousRookPosition, backRank);
 
-            ManageFirstRookMove(tmpRook, backRank);
+            chessBoard[previousRookPosition] = null;
 
-            chessBoard[backRank, previousRookX] = null;
-
-            Button? rookSquare = GetButtonAtPosition((previousRookX, backRank));
-            rookSquare!.BackgroundImage = null;
+            
 
             //transposes the rook
+
+            var tmpRook = chessBoard[previousRookPosition];  // copies the rook
             tmpRook.X = (previousRookX == (int)Files.aFile) ? (int)Files.dFile : (int)Files.fFile;
             chessBoard[backRank, tmpRook.X] = tmpRook;
 
-            Bitmap rookImage = GetImageForButton(tmpRook);
+            /*
+                        */
 
-            rookSquare = GetButtonAtPosition((tmpRook.X, backRank));
-            rookSquare!.BackgroundImage = rookImage;
+            OnCastle(new CastleEventArgs(kingDestSquare, (tmpRook.X, tmpRook.Y)));
+        }
 
+
+        protected virtual void OnCastle(CastleEventArgs e)
+        {
+            Castle?.Invoke(this, e);
         }
 
 
         private void ManageFirstKingMove((int x, int y) destinationSquare, int backRank)
         {
-            isKingFirstMove[turn] = true;
+            isKingFirstMove[Turn] = true;
 
-            if (O_O[turn] && 
+            if (O_O[Turn] && 
                 destinationSquare.x == (int)Files.gFile && 
                 destinationSquare.y == backRank)
-                ManageShortOrLongCastle((int)Files.hFile, backRank);
+                ManageShortOrLongCastle(destinationSquare, (int)Files.hFile, backRank);
 
-            else if (O_O_O[turn] && 
+            else if (O_O_O[Turn] && 
                      destinationSquare.x == (int)Files.cFile && 
                      destinationSquare.y == backRank)
-                     ManageShortOrLongCastle((int)Files.aFile, backRank);
+                     ManageShortOrLongCastle(destinationSquare, (int)Files.aFile, backRank);
         }
 
 
-        private void ManageFirstRookMove(Piece rook, int backRank)
+        // problem: if i return back the rook it probably cocount's as not yet moved
+        private void ManageFirstRookMove((int x, int y) rookPosition, int backRank)
         {
-            if (rook.X == (int)Files.aFile && rook.Y == backRank)
-                isRook_A_FirstMove[turn] = true;
+            if (rookPosition.x == (int)Files.aFile && rookPosition.y == backRank)
+                isRook_A_FirstMove[Turn] = true;
 
-            if (rook.X == (int)Files.hFile && rook.Y == backRank)
-                isRook_H_FirstMove[turn] = true;
+            if (rookPosition.x == (int)Files.hFile && rookPosition.y == backRank)
+                isRook_H_FirstMove[Turn] = true;
         }
 
         
@@ -555,7 +566,7 @@ namespace ChessGame
         {
             if (!IsPawnOneRankFromPromoting(selectedPawn)) return;
 
-            var promotion = new PromotionForm(turn);
+            var promotion = new PromotionForm(Turn);
             promotion.ShowDialog();
 
             this.selectedPiece = new Piece(destinationSquare.x, destinationSquare.y, promotion.PromotedPieceName, selectedPawn.Color);
@@ -576,7 +587,7 @@ namespace ChessGame
         {
             foreach (var piece in chessBoard)
                 if (piece != null && 
-                    piece.Color != currentPlayer[turn] && 
+                    piece.Color != currentPlayer[Turn] && 
                     piece.Name == 'K')
                     return piece;
 
@@ -606,7 +617,7 @@ namespace ChessGame
 
         private bool IsPieceSameColorAsPlayer((int x, int y) destinationSquare)
         {
-            return chessBoard[destinationSquare.y, destinationSquare.x].Color == currentPlayer[turn];
+            return chessBoard[destinationSquare.y, destinationSquare.x].Color == currentPlayer[Turn];
         }
     }
 }

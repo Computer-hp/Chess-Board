@@ -3,6 +3,7 @@ using Timer = System.Windows.Forms.Timer;
 using WindowHelper;
 using ChessLogic;
 using ChessGame;
+using Events;
 
 
 // TODO  Pin on pieces
@@ -28,19 +29,27 @@ namespace WinFormsApp1
         private Color? previousButtonColor = null;
         private Button? lastClickedButton = null;
 
-        private Game game = new();
+        private Game game;
 
-        public bool isRestarted { get; private set; } = false;
-        public bool isClosed { get; private set; } = false;
+        public bool IsRestarted { get; private set; } = false;
+        public bool IsClosed { get; private set; } = false;
 
 
         public ChessBoardForm()
         {
+            game = new Game();
             InitializeComponent();
             InitializeChessBoardFormButtons();
             InitializeChessBoardFormTimers();
             InitializeTimers();
             DarkThemeWindowHelper.ApplyDarkTheme(this);
+        }
+
+
+        private void InitializeEvents()
+        {
+            game.Castle += Game_Castle;
+            game.Checkmate += Game_Checkmate;
         }
 
 
@@ -78,7 +87,7 @@ namespace WinFormsApp1
         }
 
 
-
+/*
         private void ManageClickedButton(Button clickedButton, (int x, int y) destinationSquare)
         {
             // 3 cases
@@ -111,7 +120,7 @@ namespace WinFormsApp1
 
             lastClickedButton.BackColor = (Color)previousButtonColor!;
         }
-        
+*/       
 
 
         private void Button_Click(object sender, EventArgs e)
@@ -122,7 +131,7 @@ namespace WinFormsApp1
             game.ManageUIClickedButton(destinationSquare);
 
             // for these methods use async and await
-            ManageClickedButton(clickedButton, destinationSquare);
+            // ManageClickedButton(clickedButton, destinationSquare);
         }
 
 
@@ -130,9 +139,9 @@ namespace WinFormsApp1
         private void ManageClockTick()
         {
             // after white moves, black timer starts
-            if (!isFirstMovePlayed)
+            if (game.IsFirstMovePlayed)
             {
-                isFirstMovePlayed = true;
+                game.IsFirstMovePlayed = true;
                 timer[1].Start();
             }
 
@@ -143,11 +152,47 @@ namespace WinFormsApp1
 
             else 
             { 
-                timer[turn - chessBoard.MovePawnTowardsBlackOrWhite].Stop(); 
-                timer[turn].Start(); 
+                timer[game.Turn - game.MovePawnTowardsBlackOrWhite].Stop(); 
+                timer[game.Turn].Start(); 
             }
         }
 
+
+        private void Game_Checkmate(object sender, CheckmateEventArgs e)
+        {
+            ShowRestartForm(e.Winner);
+        }
+
+
+        private void ShowRestartForm(string winner)
+        {
+            var popUp = new RestartForm (winner) { StartPosition = FormStartPosition.CenterParent };
+            popUp.ShowDialog(this);
+
+            if (RestartForm.NewGame) IsRestarted = true;
+
+            else if (RestartForm.MainMenu) this.Close();
+        }
+
+
+        private void Game_Castle(object sender, CastleEventArgs e)
+        {
+            DisplayCastle(e.KingDestination, e.RookDestination);
+        }
+
+
+        private void DisplayCastle((int x, int y) kingDestination, (int x, int y) rookDestination)
+        {
+            Button? rookSquare = GetButtonAtPosition((previousRookX, backRank)); // rookDestination is not enough.
+                                                                                 // need to recognise wheather O_O or O_O_O
+            rookSquare!.BackgroundImage = null;
+
+            Bitmap rookImage = GetImageForButton(tmpRook);
+
+            rookSquare = GetButtonAtPosition((tmpRook.X, backRank));
+            rookSquare!.BackgroundImage = rookImage;
+
+        }
 
 
         // Find the button at the specified position

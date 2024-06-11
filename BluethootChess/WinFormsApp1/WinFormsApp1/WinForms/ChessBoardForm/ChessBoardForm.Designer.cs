@@ -106,7 +106,7 @@
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (isRestarted)
+            if (IsRestarted)
             {
                 this.FormClosing -= Form1_FormClosing;
                 this.Close();
@@ -121,7 +121,7 @@
             else if (result == DialogResult.Yes)
             {
                 this.FormClosing -= Form1_FormClosing;
-                isClosed = true;
+                IsClosed = true;
                 this.Close();
             }
         }
@@ -129,14 +129,14 @@
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            secondsElapsed[turn]++;
+            secondsElapsed[game.Turn]++;
 
-            TimeSpan time = TimeSpan.FromSeconds(secondsElapsed[turn]);
+            TimeSpan time = TimeSpan.FromSeconds(secondsElapsed[game.Turn]);
 
-            string player = (turn == 0) ? "white: " : "black: ";
+            string player = (game.Turn == 0) ? "white: " : "black: ";
 
             string timerText = string.Format(player + "{0:D2}:{1:D2}", time.Minutes, time.Seconds);
-            timerLabel[turn].Text = timerText;
+            timerLabel[game.Turn].Text = timerText;
         }
 
         #endregion

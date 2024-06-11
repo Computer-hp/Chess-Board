@@ -51,6 +51,20 @@
             int formWidth = ClientSize.Width;
             int formHeight = ClientSize.Height;
 
+            string winnerMessage = (!String.IsNullOrEmpty(winner)) ? "Draw" : $"Winner is: { winner }";
+
+            Label label = new Label()
+            {
+                Text = winnerMessage,
+                Width = buttonWidth,
+                Height = buttonHeight,
+                Left = (formWidth - buttonWidth) / 2,
+                Top = (formHeight - buttonHeight) / 2 - 60, // not sure where it spawns
+
+                ForeColor = Color.Goldenrod,
+                Font = new Font("Arial", 16, FontStyle.Bold)
+            };
+
             Button button1 = new Button()
             {
                 Text = "New Game",

@@ -10,16 +10,20 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowHelper;
+using Events;
+
 
 namespace WinFormsApp1
 {
     public partial class RestartForm : Form
     {
+        private string winner;
         public static bool NewGame { get; set; }  = false;
         public static bool MainMenu { get; set; } = false;
 
-        public RestartForm()
+        public RestartForm(string winner)
         {
+            this.winner = winner;
             InitializeComponent();
             InitializeRetartMenu();
             DarkThemeWindowHelper.ApplyDarkTheme(this);
