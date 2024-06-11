@@ -21,6 +21,8 @@ namespace WinFormsApp1
         private const int N_PLAYERS = 2;
         public const int SQUARE_SIZE = 70;
 
+        private int[] secondsElapsed = new int[N_PLAYERS];
+
         private static readonly string projectPath = GetProjectPath();  // pathToImages
 
         private Label[] timerLabel = new Label[2];
@@ -38,6 +40,7 @@ namespace WinFormsApp1
         public ChessBoardForm()
         {
             game = new Game();
+            InitializeEvents();
             InitializeComponent();
             InitializeChessBoardFormButtons();
             InitializeChessBoardFormTimers();
@@ -50,6 +53,8 @@ namespace WinFormsApp1
         {
             game.Castle += Game_Castle;
             game.Checkmate += Game_Checkmate;
+            game.UIPieceMovement += UI_Piece_Movement;
+            game.UIClockTick += UI_Clock_Tick;
         }
 
 
@@ -77,17 +82,16 @@ namespace WinFormsApp1
         }
 
 
-        public static Bitmap GetImageForButton(Piece piece)
+        public static Bitmap GetImageForButton(PieceColor color, char name)
         {
-            string DIR = piece.Color.ToString().ToLower();
-            string imagePath = DIR + "\\" + piece.Name + ".png";
+            string DIR = color.ToString().ToLower();
+            string imagePath = DIR + "\\" + name + ".png";
 
             Bitmap originalImage = (Bitmap)Image.FromFile(projectPath + imagePath);
             return originalImage;
         }
 
 
-/*
         private void ManageClickedButton(Button clickedButton, (int x, int y) destinationSquare)
         {
             // 3 cases
@@ -101,7 +105,7 @@ namespace WinFormsApp1
             // PROBLEM: example --> clicking second button after first doesnt' remove focus of the first
             // Maybe it's better to use an image in place of buttons and use the coordinates of the mouse.
 
-            if (!chessBoard.IsSquareNull(destinationSquare))
+            if (!game.IsEmptyButtonClicked(destinationSquare))
             {
                 if (lastClickedButton is not null)
                     lastClickedButton.BackColor = (Color)previousButtonColor!;
@@ -120,7 +124,6 @@ namespace WinFormsApp1
 
             lastClickedButton.BackColor = (Color)previousButtonColor!;
         }
-*/       
 
 
         private void Button_Click(object sender, EventArgs e)
@@ -128,7 +131,21 @@ namespace WinFormsApp1
             Button clickedButton = (Button)sender;
             var destinationSquare = ((int x, int y))clickedButton.Tag;
 
+            ManageClickedButton(clickedButton, destinationSquare);
             game.ManageUIClickedButton(destinationSquare);
+
+            if (game.IsLastClickedButtonNull)
+                lastClickedButton = null;
+
+            else if (game.HasLastClickedButtonChangedColor &&
+                     game.IsLastClickedButtonNull)
+            {
+                lastClickedButton.BackColor = (Color)previousButtonColor!;
+                lastClickedButton = null;
+            }
+            else if (!game.IsLastClickedButtonNull)
+                lastClickedButton = clickedButton;
+
 
             // for these methods use async and await
             // ManageClickedButton(clickedButton, destinationSquare);
@@ -136,25 +153,73 @@ namespace WinFormsApp1
 
 
         
-        private void ManageClockTick()
+        // control 'if else' fix later
+        // use 2 threads,
+        // whiteClockThread and blackClockThread,
+        // that have to wait for each other
+
+        
+
+
+        private void UI_Piece_Movement(object sender, UIPieceMovementEventArgs e)
         {
-            // after white moves, black timer starts
-            if (game.IsFirstMovePlayed)
+            DisplayPieceMovement(e.DestButtonTag);
+        }
+
+
+        private void DisplayPieceMovement((int x, int y) destSquare)
+        {
+            Button destButton = GetButtonAtPosition(destSquare);
+            destButton!.BackgroundImage = lastClickedButton!.BackgroundImage;
+
+            lastClickedButton.BackgroundImage = null;
+        }
+
+
+        private void UI_Clock_Tick(object sender, UIClockTickEventArgs e)
+        {
+            ManageClockTick(e.BlackOrWhiteClock);
+        }
+
+
+        private void ManageClockTick(int blackOrWhiteClock)
+        {
+            /*
+            if (!game.IsFirstMovePlayed)
             {
                 game.IsFirstMovePlayed = true;
                 timer[1].Start();
+                return;
             }
+            */
+                                                        
+            timer[blackOrWhiteClock].Stop();
 
-            // control 'if else' fix later
-            // use 2 threads,
-            // whiteClockThread and blackClockThread,
-            // that have to wait for each other
+            int oppositeClock = Math.Abs(blackOrWhiteClock - 1);
+            timer[oppositeClock].Tag = oppositeClock;
+            timer[oppositeClock].Start();
+        }
 
-            else 
-            { 
-                timer[game.Turn - game.MovePawnTowardsBlackOrWhite].Stop(); 
-                timer[game.Turn].Start(); 
-            }
+
+        private void Game_Castle(object sender, CastleEventArgs e)
+        {
+            DisplayCastle(e.KingDestination, e.Color);
+        }
+
+
+        private void DisplayCastle((int x, int y) kingDestination, PieceColor color)
+        {
+            int rookX = (kingDestination.x < BOARD_SIZE / 2) ? 0 : (BOARD_SIZE - 1);
+            int rookY = kingDestination.y;
+
+            Button? rookSquare = GetButtonAtPosition((rookX, rookY)); // rookDestination is not enough.
+                                                                                 // need to recognise wheather O_O or O_O_O
+            rookSquare!.BackgroundImage = null;
+
+            Bitmap rookImage = GetImageForButton(color, 'R');
+
+            rookSquare = GetButtonAtPosition((rookX, rookY));
+            rookSquare!.BackgroundImage = rookImage;
         }
 
 
@@ -173,27 +238,7 @@ namespace WinFormsApp1
 
             else if (RestartForm.MainMenu) this.Close();
         }
-
-
-        private void Game_Castle(object sender, CastleEventArgs e)
-        {
-            DisplayCastle(e.KingDestination, e.RookDestination);
-        }
-
-
-        private void DisplayCastle((int x, int y) kingDestination, (int x, int y) rookDestination)
-        {
-            Button? rookSquare = GetButtonAtPosition((previousRookX, backRank)); // rookDestination is not enough.
-                                                                                 // need to recognise wheather O_O or O_O_O
-            rookSquare!.BackgroundImage = null;
-
-            Bitmap rookImage = GetImageForButton(tmpRook);
-
-            rookSquare = GetButtonAtPosition((tmpRook.X, backRank));
-            rookSquare!.BackgroundImage = rookImage;
-
-        }
-
+        
 
         // Find the button at the specified position
         private Button? GetButtonAtPosition(ValueTuple<int, int> selectedSquare)

@@ -25,13 +25,13 @@ namespace WinFormsApp1
         {
             InitializeComponent();
 
-            PieceColor pieceTypeDir = (turn == 0) ? PieceColor.White : PieceColor.Black;
+            PieceColor color = (turn == 0) ? PieceColor.White : PieceColor.Black;
 
             int counter = 0;
 
             foreach (var buttonName in promotionPiecesName)
             {
-                InitializePromotionForm(pieceTypeDir, buttonName, counter);
+                InitializePromotionForm(color, buttonName, counter);
                 counter += BUTTON_HEIGHT;
             }
         }

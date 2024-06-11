@@ -1,4 +1,8 @@
-﻿namespace WinFormsApp1
+﻿using System;
+using Timer = System.Windows.Forms.Timer;
+using ChessLogic;
+
+namespace WinFormsApp1
 {
     partial class ChessBoardForm
     {
@@ -29,7 +33,6 @@
 
         private int centerX, centerY;
         private int chessBoardFormSize = BOARD_SIZE * SQUARE_SIZE;
-
 
 
         private void InitializeComponent()
@@ -72,12 +75,31 @@
                         Tag = (col, row)
                     };
 
-                    square.BackgroundImage = (chessBoard[row, col] != null) ? GetImageForButton(chessBoard[row, col]) : null;
+                    var pieceAttributes = GetPieceNotation(col, row);
+
+                    square.BackgroundImage = (pieceAttributes is not null) 
+                                                ? GetImageForButton(pieceAttributes.Value.color, pieceAttributes.Value.notation)
+                                                : null;
+
                     square.Click += Button_Click;
                     Controls.Add(square);
                 }
         }
 
+
+        private (PieceColor color, char notation)? GetPieceNotation(int col, int row)
+        {
+            switch (row)
+            {
+                case 1: return (PieceColor.Black, 'P');
+                case 0: return (PieceColor.Black, ChessBoard.Pieces[col]);
+
+                case 6: return (PieceColor.White, 'P');
+                case 7: return (PieceColor.White, ChessBoard.Pieces[col]);
+
+                default: return null;
+            }
+        }
 
 
         private void InitializeChessBoardFormTimers()
@@ -129,14 +151,17 @@
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            secondsElapsed[game.Turn]++;
+            Timer timer = sender as Timer;
+            int turn = (int)timer.Tag;
 
-            TimeSpan time = TimeSpan.FromSeconds(secondsElapsed[game.Turn]);
+            secondsElapsed[turn]++;
 
-            string player = (game.Turn == 0) ? "white: " : "black: ";
+            TimeSpan time = TimeSpan.FromSeconds(secondsElapsed[turn]);
+
+            string player = (turn == 0) ? "white: " : "black: ";
 
             string timerText = string.Format(player + "{0:D2}:{1:D2}", time.Minutes, time.Seconds);
-            timerLabel[game.Turn].Text = timerText;
+            timerLabel[turn].Text = timerText;
         }
 
         #endregion

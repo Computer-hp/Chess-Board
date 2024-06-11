@@ -40,6 +40,9 @@ namespace ChessLogic
             (1, 2), (1, -2), (-1, 2), (-1, -2)
         };
 
+
+        public static readonly char[] Pieces = { 'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R' };
+
         // maybe is better to use HashSet then List, for ValidMoves and CopyMoves
         public List<(int x, int y)> ValidMoves { get; set; } = new();
 
@@ -112,8 +115,6 @@ namespace ChessLogic
 
         public void InitializePieces()
         {
-            char[] pieces = { 'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R' };
-
             int firstRank = (int)Ranks.FirstRank;
             int secondRank = (int)Ranks.SecondRank;
             int seventhRank = (int)Ranks.SeventhRank;
@@ -122,10 +123,10 @@ namespace ChessLogic
             for (int x = 0; x < BOARD_SIZE; x++)
             {
                 board[secondRank, x] = new Piece(x, secondRank, 'P', PieceColor.White);
-                board[firstRank, x] = new Piece(x, firstRank, pieces[x], PieceColor.White);
+                board[firstRank, x] = new Piece(x, firstRank, Pieces[x], PieceColor.White);
 
                 board[seventhRank, x] = new Piece(x, seventhRank, 'P', PieceColor.Black);
-                board[eightRank, x] = new Piece(x, eightRank, pieces[x], PieceColor.Black);
+                board[eightRank, x] = new Piece(x, eightRank, Pieces[x], PieceColor.Black);
             }
         }
 

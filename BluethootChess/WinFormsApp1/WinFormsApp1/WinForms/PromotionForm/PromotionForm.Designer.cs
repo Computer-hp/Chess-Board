@@ -50,12 +50,12 @@ namespace WinFormsApp1
 
 
 
-        private void InitializePromotionForm(PieceColor pieceTypeDir, char buttonName, int counter)
+        private void InitializePromotionForm(PieceColor color, char notation, int counter)
         {
             int formWidth = this.ClientSize.Width;
             int formHeight = this.ClientSize.Height;
 
-            Bitmap resizedImage = ChessBoardForm.GetImageForButton(new Piece(0, 0, buttonName, pieceTypeDir));
+            Bitmap resizedImage = ChessBoardForm.GetImageForButton(color, notation);
 
             Button button = new()
             {
@@ -63,7 +63,7 @@ namespace WinFormsApp1
                 Height = BUTTON_HEIGHT,
                 Left = (formWidth - BUTTON_WIDTH) / 2,
                 Top = counter,
-                Name = buttonName.ToString(),
+                Name = notation.ToString(),
                 BackColor = Color.Ivory,
                 FlatStyle = FlatStyle.Flat,
                 FlatAppearance = { BorderSize = 1 },

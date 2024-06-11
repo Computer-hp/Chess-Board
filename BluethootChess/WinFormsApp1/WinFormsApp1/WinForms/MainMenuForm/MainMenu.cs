@@ -50,10 +50,10 @@ namespace WinFormsApp1
         {
             while (true)
             {
-                if (chessBoardForm.isRestarted)
+                if (chessBoardForm.IsRestarted)
                     break;
 
-                if (chessBoardForm.isClosed)
+                if (chessBoardForm.IsClosed)
                 {
                     this.Invoke(new Action(Show));
                     return;
