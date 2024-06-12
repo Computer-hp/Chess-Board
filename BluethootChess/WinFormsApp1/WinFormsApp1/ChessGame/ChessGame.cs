@@ -24,12 +24,16 @@ namespace ChessGame
 
         private static readonly PieceColor[] currentPlayer = { PieceColor.White, PieceColor.Black };
 
+        private static readonly char[] piecesThatMoveStraight = { 'R', 'Q' };
+        private static readonly char[] piecesThatMoveDiagonally = { 'B', 'Q' };
+
         private ChessBoard chessBoard;
 
         private Piece? selectedPiece = null;
 
-        private static readonly char[] piecesThatMoveStraight = { 'R', 'Q' };
-        private static readonly char[] piecesThatMoveDiagonally = { 'B', 'Q' };
+        private List<(int x, int y)>? validMoves = new();
+        private List<(int x, int y)>? copyMoves = new();
+        private Dictionary<(int x, int y), List<(int validX, int validY)>>? stopCheckWithPiece = new();
 
         public const int SQUARE_SIZE = 70;
         public bool IsFirstMovePlayed { get; set; } = false;
@@ -37,10 +41,10 @@ namespace ChessGame
         public bool IsLastClickedButtonNull = true;
         public bool HasLastClickedButtonChangedColor = true;
 
-        public event EventHandler<CastleEventArgs>           Castle;
-        public event EventHandler<CheckmateEventArgs>        Checkmate;
-        public event EventHandler<UIPieceMovementEventArgs>  UIPieceMovement;
-        public event EventHandler<UIClockTickEventArgs>      UIClockTick;
+        public event EventHandler<CastleEventArgs>?           Castle;
+        public event EventHandler<CheckmateEventArgs>?        Checkmate;
+        public event EventHandler<UIPieceMovementEventArgs>?  UIPieceMovement;
+        public event EventHandler<UIClockTickEventArgs>?      UIClockTick;
 
 
         public Game()
@@ -50,9 +54,9 @@ namespace ChessGame
         }
 
 
-        public bool IsEmptyButtonClicked((int x, int y) destSquare)
+        public bool IsPieceClicked((int x, int y) destSquare)
         {
-            return chessBoard.IsSquareNull(destSquare);
+            return !chessBoard.IsSquareNull(destSquare) && IsPieceSameColorAsPlayer(destSquare);
         }
 
 
@@ -72,7 +76,6 @@ namespace ChessGame
                 ManageSelectedPiece(destinationSquare);
                 IsLastClickedButtonNull = false;
                 HasLastClickedButtonChangedColor = false;
-                // lastClickedButton = clickedButton;
                 return;
             }
 
@@ -84,7 +87,6 @@ namespace ChessGame
                 selectedPiece = null;
                 IsLastClickedButtonNull = true;
                 HasLastClickedButtonChangedColor = false;
-                // lastClickedButton = null;
                 return; 
             }
 
@@ -96,30 +98,23 @@ namespace ChessGame
 
                                 // selectedPiece --> Tuple called originSquare
             ManagePieceMovement(originSquare, destinationSquare);
-            //ManageClockTick();
 
         // ###
+        // then this method is fine
 
-            // lastClickedButton!.BackgroundImage = null;
-            //clickedButton.BackgroundImage = GetImageForButton(chessBoard[destinationSquare.y, destinationSquare.x]); // maybe is good to use async and await,
-                                                                                                                     // so i can make code more readable and
-                                                                                                                     // change the BackgroundImage of the Button
-            // then this method is fine
             ManageSituationAfterPieceMovement(destinationSquare);
            
         // final things to do
-        // ###
+
             chessBoard.MovePawnTowardsBlackOrWhite = -1 * (turn * 2 - 1);  
-            chessBoard.ValidMoves.Clear();
+            // validMoves.Clear(); // not neccesary
+
             HasLastClickedButtonChangedColor = true;
             IsLastClickedButtonNull = true;
-            // lastClickedButton.BackColor = (Color)previousButtonColor!;
+
             turn = (turn + 1) % 2;
             selectedPiece = null;
-            // lastClickedButton = null;
-        // ###
-
-            chessBoard.PrintMovesThatCanStopCheck();
+            chessBoard.PrintMovesThatCanStopCheck(stopCheckWithPiece);
         }
         
 
@@ -133,10 +128,10 @@ namespace ChessGame
         private void ManageSelectedPiece((int x, int y) destinationSquare)
         {
             selectedPiece = chessBoard[destinationSquare];
-            chessBoard.CalculateMoves(selectedPiece);
+            validMoves = chessBoard.CalculateMoves(selectedPiece);
 
             Debug.WriteLine($"{selectedPiece.Name}, {selectedPiece.Color}");
-            Debug.WriteLine(chessBoard.ToString() + "\n");
+            Debug.WriteLine(chessBoard.PrintMoves(validMoves) + "\n");
 
             if (selectedPiece.Name == 'P') 
             { 
@@ -147,19 +142,19 @@ namespace ChessGame
             if (selectedPiece.Name != 'K') return;
 
             RemoveInvalidSquaresOfKing(selectedPiece);
-                                                                //   secondfile         fifthfile
+                                                            //   secondfile         fifthfile
             if (!O_O_O[turn])  O_O_O[turn] = IsCastleLegal((int)Files.bFile, (int)Files.eFile, isRook_A_FirstMove[turn]);
-    //                                                                sixthfile             eighthfile
+                                                       //  sixthfile             eighthfile
             if (!O_O[turn])  O_O[turn] = IsCastleLegal((int)Files.fFile, (int)Files.hFile, isRook_H_FirstMove[turn]);
 
             Debug.WriteLine("king moves:");
-            Debug.WriteLine(chessBoard.ToString() + "\n");
+            Debug.WriteLine(chessBoard.PrintMoves(validMoves) + "\n");
         }
 
 
         private bool IsMoveLegal((int x, int y) destinationSquare)
         {
-            return IsSquareInList(chessBoard.ValidMoves, destinationSquare) &&
+            return IsSquareInList(validMoves, destinationSquare) &&
                    !ChessBoard.IsSquareOutsideTheBoard(destinationSquare) &&
                    (chessBoard.IsSquareNull(destinationSquare) ||
                    !IsPieceSameColorAsPlayer(destinationSquare));
@@ -168,21 +163,21 @@ namespace ChessGame
 
         private bool IsMoveLegalWhenCheck(ValueTuple<int, int> destinationSquare)
         {
-            chessBoard.CopyMoves.Clear();
+            copyMoves.Clear();
 
-            if (selectedPiece!.Name == 'K') chessBoard.CopyMoves.AddRange(chessBoard.ValidMoves);
+            if (selectedPiece!.Name == 'K') copyMoves.AddRange(validMoves);
 
-            else if (chessBoard.StopCheckWithPiece.ContainsKey((selectedPiece.X, selectedPiece.Y)))
+            else if (stopCheckWithPiece.ContainsKey((selectedPiece.X, selectedPiece.Y)))
             {
-                List<ValueTuple<int, int>> movesToStopCheck = chessBoard.StopCheckWithPiece[(selectedPiece.X, selectedPiece.Y)];
+                List<ValueTuple<int, int>> movesToStopCheck = stopCheckWithPiece[(selectedPiece.X, selectedPiece.Y)];
 
                 if (IsSquareInList(movesToStopCheck, destinationSquare))
-                    chessBoard.CopyMoves.AddRange(chessBoard.StopCheckWithPiece[(selectedPiece.X, selectedPiece.Y)]);
+                    copyMoves.AddRange(stopCheckWithPiece[(selectedPiece.X, selectedPiece.Y)]);
             }
 
-            if (!chessBoard.CopyMoves.Exists(square => IsSquareInList(chessBoard.ValidMoves, square))) return false;
+            if (!copyMoves.Exists(square => IsSquareInList(validMoves, square))) return false;
 
-            ClearDictionary(chessBoard.StopCheckWithPiece);
+            ClearDictionary(stopCheckWithPiece);
             
             isCheck = false;
             return true;
@@ -203,7 +198,8 @@ namespace ChessGame
             else if (selectedPiece.Name == 'R')
                 ManageFirstRookMove(originSquare);
 
-            OnPieceMovement(new UIPieceMovementEventArgs(destinationSquare), new UIClockTickEventArgs(Math.Abs(turn - 1)));
+            OnPieceMovement(new UIPieceMovementEventArgs(destinationSquare, currentPlayer[turn], selectedPiece.Name), 
+                            new UIClockTickEventArgs(turn));
         }
 
 
@@ -227,7 +223,7 @@ namespace ChessGame
                 return;
 
             if (lastMovedPiece.Name == 'P')
-                chessBoard.ValidMoves.RemoveAll(square => square.y == lastMovedPiece.Y + chessBoard.MovePawnTowardsBlackOrWhite);
+                validMoves.RemoveAll(square => square.y == lastMovedPiece.Y + chessBoard.MovePawnTowardsBlackOrWhite);
 
             ManageSituationAfterCheck(king);
 
@@ -246,15 +242,15 @@ namespace ChessGame
 
         private bool HasPieceGivenCheck((int x, int y) kingPosition, (int x, int y) destinationSquare)
         {
-            chessBoard.ValidMoves.Clear(); // maybe is not neccesary
+            // chessBoard.ValidMoves.Clear(); // maybe is not neccesary
             var lastPieceMoved = chessBoard[destinationSquare.y, destinationSquare.x];
 
             if (selectedPiece!.Name == 'P' || selectedPiece.Name == 'N')
-                chessBoard.CalculateMoves(lastPieceMoved);
+                validMoves = chessBoard.CalculateMoves(lastPieceMoved);
 
             else DefineDirectionTowardsKing(selectedPiece.Name, kingPosition, destinationSquare);
 
-            chessBoard.ValidMoves.Add((destinationSquare.x, destinationSquare.y));  // piece that gives check can also be captured
+            validMoves.Add((destinationSquare.x, destinationSquare.y));  // piece that gives check can also be captured
                                                                                  // to stop check (neccessary for Knight and Pawn)
             isCheck = IsCheck(kingPosition);
             Debug.WriteLine($"\n\n******* IS CHECK = {isCheck} *******\n");
@@ -264,7 +260,7 @@ namespace ChessGame
 
         private bool IsCheck(ValueTuple<int, int> kingPosition)
         {
-            if (IsSquareInList(chessBoard.ValidMoves, kingPosition)) return true;
+            if (IsSquareInList(validMoves, kingPosition)) return true;
             
             return false;
         }
@@ -272,9 +268,9 @@ namespace ChessGame
 
         private void ManageSituationAfterCheck(Piece king)
         {
-            chessBoard.CopyMoves.Clear();
+            copyMoves.Clear();
             
-            chessBoard.CopyMoves.AddRange(chessBoard.ValidMoves);
+            copyMoves.AddRange(validMoves);
 
             foreach (var piece in chessBoard)
             {
@@ -283,23 +279,23 @@ namespace ChessGame
                     piece.Color == selectedPiece!.Color)
                     continue;
                 
-                chessBoard.CalculateMoves(piece);
+                validMoves = chessBoard.CalculateMoves(piece);
 
                 if (piece.Name == 'P') ManageInvalidDiagonalPawnMoves(piece);
 
-                RemoveSquaresFromList(chessBoard.ValidMoves, (king.X, king.Y));
+                RemoveSquaresFromList(validMoves, (king.X, king.Y));
                 StopCheck(piece);
             }
 
-            chessBoard.CalculateMoves(king);
+            validMoves = chessBoard.CalculateMoves(king);
             RemoveInvalidSquaresOfKing(king);
         }
 
 
         private bool IsCheckmate()
         {
-            bool noValidMoves = !chessBoard.ValidMoves.Any();
-            bool noBlockingPieces = !chessBoard.StopCheckWithPiece.Any(); // maybe incorrect
+            bool noValidMoves = !validMoves.Any();
+            bool noBlockingPieces = !stopCheckWithPiece.Any(); // maybe incorrect
 
             return noValidMoves && noBlockingPieces;
         }
@@ -315,7 +311,7 @@ namespace ChessGame
             Debug.Write($"\n'direction' = {direction}\n");
 
             if (direction is not null)
-                chessBoard.CalculateMoves(chessBoard[destinationSquare.y, destinationSquare.x], direction);
+                validMoves = chessBoard.CalculateMoves(chessBoard[destinationSquare.y, destinationSquare.x], direction);
 
             if (pieceName == 'R' || direction is not null) return;
 
@@ -325,7 +321,7 @@ namespace ChessGame
             Debug.Write($"\n'direction' = {direction}\n");
 
             if (direction is not null)
-                chessBoard.CalculateMoves(chessBoard[destinationSquare.y, destinationSquare.x], direction);
+                validMoves = chessBoard.CalculateMoves(chessBoard[destinationSquare.y, destinationSquare.x], direction);
         }
 
 
@@ -370,7 +366,7 @@ namespace ChessGame
             var king = selectedPiece;
 
             List<ValueTuple<int, int>> tmpKingMoves = new();
-            tmpKingMoves.AddRange(chessBoard.ValidMoves);
+            tmpKingMoves.AddRange(validMoves);
 
             for (int tmpStartingFile = startingFile; tmpStartingFile < endingFile; tmpStartingFile++)
             {
@@ -385,25 +381,25 @@ namespace ChessGame
                         piece.Color == king!.Color)
                         continue;
 
-                    chessBoard.CalculateMoves(piece);
+                    validMoves = chessBoard.CalculateMoves(piece);
 
                     if (piece.Name == 'P')
-                        chessBoard.ValidMoves.RemoveAll(square => square.x == piece.X &&
+                        validMoves.RemoveAll(square => square.x == piece.X &&
                                                         (square.y == piece.Y - chessBoard.MovePawnTowardsBlackOrWhite ||
                                                         square.y == piece.Y - chessBoard.MovePawnTowardsBlackOrWhite * 2));
 
-                    if (IsSquareInList(chessBoard.ValidMoves, (tmpStartingFile, currentBackRank)))
+                    if (IsSquareInList(validMoves, (tmpStartingFile, currentBackRank)))
                     {
-                        chessBoard.ValidMoves.Clear();
-                        chessBoard.ValidMoves.AddRange(tmpKingMoves);
+                        validMoves.Clear();
+                        validMoves.AddRange(tmpKingMoves);
                         return false;
                     }
                 }
             }
 
             tmpKingMoves.Add((startingFile + 1, currentBackRank)); // add the square to enable O_O or O_O_O
-            chessBoard.ValidMoves.Clear();
-            chessBoard.ValidMoves.AddRange(tmpKingMoves);
+            validMoves.Clear();
+            validMoves.AddRange(tmpKingMoves);
             return true;
         }
 
@@ -412,7 +408,7 @@ namespace ChessGame
         private void RemoveInvalidSquaresOfKing(Piece king)
         {
             List<(int x, int y)> tmpKingMoves = new();
-            tmpKingMoves.AddRange(chessBoard.ValidMoves);
+            tmpKingMoves.AddRange(validMoves);
 
             foreach (var piece in chessBoard)
             {
@@ -422,20 +418,20 @@ namespace ChessGame
                     continue;
 
 
-                chessBoard.CalculateMoves(piece);
+                validMoves = chessBoard.CalculateMoves(piece);
 
                 // to remove straight moves of the PAWN, by one square and/or two squares in case the pawn hasn't been moved yet
                 if (piece.Name == 'P')
                 {
-                    RemoveSquaresFromList(chessBoard.ValidMoves, (piece.X, piece.Y + chessBoard.MovePawnTowardsBlackOrWhite));
-                    RemoveSquaresFromList(chessBoard.ValidMoves, (piece.X, piece.Y + chessBoard.MovePawnTowardsBlackOrWhite * 2));
+                    RemoveSquaresFromList(validMoves, (piece.X, piece.Y + chessBoard.MovePawnTowardsBlackOrWhite));
+                    RemoveSquaresFromList(validMoves, (piece.X, piece.Y + chessBoard.MovePawnTowardsBlackOrWhite * 2));
                 }
 
-                tmpKingMoves.RemoveAll(square => IsSquareInList(chessBoard.ValidMoves, square)); // strange but ok
+                tmpKingMoves.RemoveAll(square => IsSquareInList(validMoves, square)); // strange but ok
             }
             
-            chessBoard.ValidMoves.Clear();  // if this is removed than ValidMoves will contain the moves of the piece that protects the one that gave check
-            chessBoard.ValidMoves.AddRange(tmpKingMoves);
+            validMoves.Clear();  // if this is removed than ValidMoves will contain the moves of the piece that protects the one that gave check
+            validMoves.AddRange(tmpKingMoves);
 
             CheckPiecesNearKing(king);
         }
@@ -463,13 +459,13 @@ namespace ChessGame
 
             if (king.Color == pieceNearKing.Color) // if a piece with the same color is placed near the king
             {
-                RemoveSquaresFromList(chessBoard.ValidMoves, (pieceNearKing.X, pieceNearKing.Y));
+                RemoveSquaresFromList(validMoves, (pieceNearKing.X, pieceNearKing.Y));
                 return;
             }
 
 
             List<ValueTuple<int, int>> tmpKingMoves = new();
-            tmpKingMoves.AddRange(chessBoard.ValidMoves);
+            tmpKingMoves.AddRange(validMoves);
 
             // controls whether the piece near king is protected by another piece,
             // so the king can't capture it
@@ -480,17 +476,17 @@ namespace ChessGame
                     piece.Color != pieceNearKing.Color)
                     continue;
 
-                chessBoard.CalculateMoves(piece);
+                validMoves = chessBoard.CalculateMoves(piece);
 
-                if (IsSquareInList(chessBoard.ValidMoves, (pieceNearKing.X, pieceNearKing.Y)))
+                if (IsSquareInList(validMoves, (pieceNearKing.X, pieceNearKing.Y)))
                 {
                     RemoveSquaresFromList(tmpKingMoves, (pieceNearKing.X, pieceNearKing.Y));
                     break;
                 }
             }
 
-            chessBoard.ValidMoves.Clear();
-            chessBoard.ValidMoves.AddRange(tmpKingMoves);
+            validMoves.Clear();
+            validMoves.AddRange(tmpKingMoves);
         }
 
 
@@ -499,15 +495,15 @@ namespace ChessGame
         {
             List<ValueTuple<int, int>> tmpMoves = new();
 
-            foreach (var square in chessBoard.ValidMoves)
-                if (IsSquareInList(chessBoard.CopyMoves, square))
+            foreach (var square in validMoves)
+                if (IsSquareInList(copyMoves, square))
                     tmpMoves.Add(square);
 
             if (!tmpMoves.Any())
                 return;
 
             ValueTuple<int, int> key = (piece.X, piece.Y);
-            chessBoard.StopCheckWithPiece[key] = tmpMoves;
+            stopCheckWithPiece[key] = tmpMoves;
         }
 
 
@@ -520,7 +516,7 @@ namespace ChessGame
                 kingDestSquare.y == currentBackRank)
             {
                 ManageShortOrLongCastle((int)Files.hFile);
-                OnCastle(new CastleEventArgs(kingDestSquare, currentPlayer[turn]));
+                OnCastle(new CastleEventArgs(kingDestSquare, ((int)Files.fFile, currentBackRank), currentPlayer[turn]));
             }
 
             else if (O_O_O[turn] && 
@@ -529,7 +525,7 @@ namespace ChessGame
             {
 
                 ManageShortOrLongCastle((int)Files.aFile);
-                OnCastle(new CastleEventArgs(kingDestSquare, currentPlayer[turn]));  // repetition !!!
+                OnCastle(new CastleEventArgs(kingDestSquare, ((int)Files.dFile, currentBackRank), currentPlayer[turn]));  // repetition !!!
             }
         }
 
@@ -579,7 +575,7 @@ namespace ChessGame
                 (chessBoard.IsSquareNull(destinationSquare) ||
                  chessBoard[destinationSquare.y, destinationSquare.x].Name == 'K'))
 
-                RemoveSquaresFromList(chessBoard.ValidMoves, destinationSquare);
+                RemoveSquaresFromList(validMoves, destinationSquare);
         }
 
 
@@ -590,7 +586,7 @@ namespace ChessGame
             var promotion = new PromotionForm(turn);
             promotion.ShowDialog();
 
-            this.selectedPiece = new Piece(destinationSquare.x, destinationSquare.y, promotion.PromotedPieceName, selectedPawn.Color);
+            selectedPiece = new Piece(destinationSquare.x, destinationSquare.y, promotion.PromotedPieceName, selectedPawn.Color);
             Debug.Write($"\nPromotion: {promotion.Name}\n");
         }
         
@@ -617,15 +613,15 @@ namespace ChessGame
 
 
 
-        private static void RemoveSquaresFromList(List<ValueTuple<int, int>> list, ValueTuple<int, int> destinationSquare)
+        private static void RemoveSquaresFromList(List<ValueTuple<int, int>>? list, ValueTuple<int, int> destinationSquare)
         {
-            list.Remove(destinationSquare);
+            list!.Remove(destinationSquare);
         }
 
 
-        private static bool IsSquareInList(List<ValueTuple<int, int>> list, ValueTuple<int, int> destinationSquare)
+        private static bool IsSquareInList(List<ValueTuple<int, int>>? list, ValueTuple<int, int> destinationSquare)
         {
-            return list.Exists(square => square == destinationSquare);
+            return list!.Exists(square => square == destinationSquare);
         }
 
 

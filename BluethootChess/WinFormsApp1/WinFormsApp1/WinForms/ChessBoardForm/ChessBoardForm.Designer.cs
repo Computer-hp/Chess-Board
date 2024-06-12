@@ -1,6 +1,7 @@
 ﻿using System;
 using Timer = System.Windows.Forms.Timer;
 using ChessLogic;
+using WindowHelper;
 
 namespace WinFormsApp1
 {
@@ -78,7 +79,7 @@ namespace WinFormsApp1
                     var pieceAttributes = GetPieceNotation(col, row);
 
                     square.BackgroundImage = (pieceAttributes is not null) 
-                                                ? GetImageForButton(pieceAttributes.Value.color, pieceAttributes.Value.notation)
+                                                ? PieceImages.GetPieceImage(pieceAttributes.Value.color, pieceAttributes.Value.notation)
                                                 : null;
 
                     square.Click += Button_Click;

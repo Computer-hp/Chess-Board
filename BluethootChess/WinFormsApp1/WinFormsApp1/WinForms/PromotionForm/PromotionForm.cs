@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -35,7 +36,6 @@ namespace WinFormsApp1
                 counter += BUTTON_HEIGHT;
             }
         }
-
 
 
         private void Piece_Promote(object sender, EventArgs e)

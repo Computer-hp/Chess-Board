@@ -15,8 +15,8 @@ namespace WinFormsApp1
     public partial class MainMenu : Form
     {
         private ChessBoardForm chessBoardForm;
-        private Thread mainFormThread;
-
+        private Task mainFormTask;
+        private CancellationTokenSource cts;
 
 
         public MainMenu()
@@ -29,43 +29,63 @@ namespace WinFormsApp1
 
         private void Create_ChessBoard(object? sender, EventArgs e)
         {
-            chessBoardForm = new ChessBoardForm();
-
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
-
-            // popUp to choose the color and the time
-
-            this.Invoke(chessBoardForm.Show);
-            this.Invoke(new Action(Hide));
-
-            mainFormThread = new Thread(() => HandleChessBoard());
-            mainFormThread.Start();
-        }
-
-
-
-        private void HandleChessBoard()
-        {
-            while (true)
+            this.Invoke(new Action(() =>
             {
-                if (chessBoardForm.IsRestarted)
-                    break;
+                chessBoardForm = new ChessBoardForm();
 
-                if (chessBoardForm.IsClosed)
-                {
-                    this.Invoke(new Action(Show));
-                    return;
-                }
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
 
-            }
+                chessBoardForm.Show();
+                this.Hide();
+            }));
 
-            this.Invoke(new Action(chessBoardForm.Close));
-            Create_ChessBoard(null, EventArgs.Empty);
+            cts = new CancellationTokenSource();
+            mainFormTask = Task.Run(() => HandleChessBoard(cts.Token), cts.Token);
         }
 
-        
+
+
+        private void HandleChessBoard(CancellationToken token)
+        {
+            try
+            {
+                while (!token.IsCancellationRequested)
+                {
+                    if (chessBoardForm.IsRestarted)
+                    {
+                        this.Invoke(new Action(() =>
+                        {
+                            chessBoardForm.Close();
+                            Create_ChessBoard(null, EventArgs.Empty);
+                        }));
+
+                        return;
+                    }
+
+                    if (chessBoardForm.IsClosed)
+                    {
+                        this.Invoke(new Action(this.Show));
+                        return;
+                    }
+
+                    Thread.Sleep(100);
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                Debug.Write("\nObjectDisposedException occured\n");
+            }
+        }
+
+
+        private void ChessBoardForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            if (chessBoardForm.IsClosed)
+                this.Invoke(new Action(this.Show));
+        }
+
 
         private void Button_ConnectBluetooth(object sender, EventArgs e)
         {
@@ -73,9 +93,9 @@ namespace WinFormsApp1
         }
 
 
-
         private void Button_Exit(object sender, EventArgs e)
         {
+            cts?.Cancel();
             Application.Exit();
         }
     }

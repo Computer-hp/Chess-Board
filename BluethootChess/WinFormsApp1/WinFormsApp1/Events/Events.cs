@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WindowHelper;
 
 namespace Events
 {
     public class CheckmateEventArgs : EventArgs
     {
-        public readonly string Winner;// { get; }
+        public readonly string Winner;
 
 
         public CheckmateEventArgs(string winner)
@@ -22,12 +23,14 @@ namespace Events
     public class CastleEventArgs : EventArgs
     {
         public readonly (int x, int y) KingDestination;
+        public readonly (int x, int y) RookDestination;
         public readonly PieceColor Color; 
 
 
-        public CastleEventArgs((int x, int y) kingDestination, PieceColor color)
+        public CastleEventArgs((int x, int y) kingDestination, (int x, int y) rookDestination, PieceColor color)
         {
             KingDestination = kingDestination;
+            RookDestination = rookDestination;
             Color = color;
         }
     }
@@ -36,18 +39,19 @@ namespace Events
     public class UIPieceMovementEventArgs : EventArgs
     {
         public readonly (int x, int y) DestButtonTag;
+        public readonly Bitmap ButtonImage;
 
 
-        public UIPieceMovementEventArgs((int x, int y) originSquare)
+        public UIPieceMovementEventArgs((int x, int y) originSquare, PieceColor color, char pieceName)
         {
             DestButtonTag = originSquare;
+            ButtonImage = PieceImages.GetPieceImage(color, pieceName);
         }
     }
 
 
     public class UIClockTickEventArgs : EventArgs
     {
-        // public bool IsFirstMovePlayed { get; set; }
         public readonly int BlackOrWhiteClock;
 
 

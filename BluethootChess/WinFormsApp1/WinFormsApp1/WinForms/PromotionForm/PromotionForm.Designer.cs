@@ -1,4 +1,5 @@
 ﻿using ChessLogic;
+using WindowHelper;
 
 namespace WinFormsApp1
 {
@@ -55,7 +56,7 @@ namespace WinFormsApp1
             int formWidth = this.ClientSize.Width;
             int formHeight = this.ClientSize.Height;
 
-            Bitmap resizedImage = ChessBoardForm.GetImageForButton(color, notation);
+            Bitmap resizedImage = PieceImages.GetPieceImage(color, notation);
 
             Button button = new()
             {
