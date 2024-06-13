@@ -1,4 +1,4 @@
-using System.Diagnostics;
+using System.Windows.Forms;
 using Timer = System.Windows.Forms.Timer;
 using WindowHelper;
 using ChessLogic;
@@ -20,7 +20,8 @@ namespace WinFormsApp1
     {
         private const int BOARD_SIZE = 8;
         private const int N_PLAYERS = 2;
-        public const int SQUARE_SIZE = 70;
+        public const int SQUARE_SIZE = 60;
+        public const int TIMER_LABEL_HEIGHT = 30;
 
         private int[] secondsElapsed = new int[N_PLAYERS];
 
@@ -41,9 +42,6 @@ namespace WinFormsApp1
             game = new Game();
             InitializeEvents();
             InitializeComponent();
-            InitializeChessBoardFormButtons();
-            InitializeChessBoardFormTimers();
-            InitializeTimers();
             DarkThemeWindowHelper.ApplyDarkTheme(this);
         }
 
@@ -67,7 +65,7 @@ namespace WinFormsApp1
         {
             for (int i = 0; i < N_PLAYERS; i++)
             {
-                timer[i] = new Timer { Interval = 1000 };
+                timer[i] = new Timer { Interval = 100 };
                 timer[i].Tick += Timer_Tick;
             }
         }
@@ -142,7 +140,11 @@ namespace WinFormsApp1
 
             int oppositeClock = Math.Abs(blackOrWhiteClock - 1);
             timer[oppositeClock].Tag = oppositeClock;
-            timer[oppositeClock].Start();
+
+            timerLabel[oppositeClock].BeginInvoke((MethodInvoker)delegate 
+            {
+                timer[oppositeClock].Start();
+            });
         }
 
 

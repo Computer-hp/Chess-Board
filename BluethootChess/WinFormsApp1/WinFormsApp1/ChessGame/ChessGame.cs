@@ -31,9 +31,9 @@ namespace ChessGame
 
         private Piece? selectedPiece = null;
 
-        private List<(int x, int y)>? validMoves = new();
-        private List<(int x, int y)>? copyMoves = new();
-        private Dictionary<(int x, int y), List<(int validX, int validY)>>? stopCheckWithPiece = new();
+        private List<(int x, int y)> validMoves = new();
+        private List<(int x, int y)> copyMoves = new();
+        private Dictionary<(int x, int y), List<(int validX, int validY)>> piecesAbleToStopCheck = new();
 
         public const int SQUARE_SIZE = 70;
         public bool IsFirstMovePlayed { get; set; } = false;
@@ -114,7 +114,7 @@ namespace ChessGame
 
             turn = (turn + 1) % 2;
             selectedPiece = null;
-            chessBoard.PrintMovesThatCanStopCheck(stopCheckWithPiece);
+            ChessBoard.PrintMovesThatCanStopCheck(piecesAbleToStopCheck);
         }
         
 
@@ -131,7 +131,7 @@ namespace ChessGame
             validMoves = chessBoard.CalculateMoves(selectedPiece);
 
             Debug.WriteLine($"{selectedPiece.Name}, {selectedPiece.Color}");
-            Debug.WriteLine(chessBoard.PrintMoves(validMoves) + "\n");
+            Debug.WriteLine(ChessBoard.PrintMoves(validMoves) + "\n");
 
             if (selectedPiece.Name == 'P') 
             { 
@@ -142,13 +142,15 @@ namespace ChessGame
             if (selectedPiece.Name != 'K') return;
 
             RemoveInvalidSquaresOfKing(selectedPiece);
-                                                            //   secondfile         fifthfile
-            if (!O_O_O[turn])  O_O_O[turn] = IsCastleLegal((int)Files.bFile, (int)Files.eFile, isRook_A_FirstMove[turn]);
-                                                       //  sixthfile             eighthfile
-            if (!O_O[turn])  O_O[turn] = IsCastleLegal((int)Files.fFile, (int)Files.hFile, isRook_H_FirstMove[turn]);
+            
+            if (!O_O_O[turn])  
+                O_O_O[turn] = IsCastleLegal((int)Files.bFile, (int)Files.eFile, isRook_A_FirstMove[turn]);
+
+            if (!O_O[turn])  
+                O_O[turn] = IsCastleLegal((int)Files.fFile, (int)Files.hFile, isRook_H_FirstMove[turn]);
 
             Debug.WriteLine("king moves:");
-            Debug.WriteLine(chessBoard.PrintMoves(validMoves) + "\n");
+            Debug.WriteLine(ChessBoard.PrintMoves(validMoves) + "\n");
         }
 
 
@@ -167,17 +169,17 @@ namespace ChessGame
 
             if (selectedPiece!.Name == 'K') copyMoves.AddRange(validMoves);
 
-            else if (stopCheckWithPiece.ContainsKey((selectedPiece.X, selectedPiece.Y)))
+            else if (piecesAbleToStopCheck.ContainsKey((selectedPiece.X, selectedPiece.Y)))
             {
-                List<ValueTuple<int, int>> movesToStopCheck = stopCheckWithPiece[(selectedPiece.X, selectedPiece.Y)];
+                List<ValueTuple<int, int>> movesToStopCheck = piecesAbleToStopCheck[(selectedPiece.X, selectedPiece.Y)];
 
                 if (IsSquareInList(movesToStopCheck, destinationSquare))
-                    copyMoves.AddRange(stopCheckWithPiece[(selectedPiece.X, selectedPiece.Y)]);
+                    copyMoves.AddRange(piecesAbleToStopCheck[(selectedPiece.X, selectedPiece.Y)]);
             }
 
             if (!copyMoves.Exists(square => IsSquareInList(validMoves, square))) return false;
 
-            ClearDictionary(stopCheckWithPiece);
+            ClearDictionary(piecesAbleToStopCheck);
             
             isCheck = false;
             return true;
@@ -295,7 +297,7 @@ namespace ChessGame
         private bool IsCheckmate()
         {
             bool noValidMoves = !validMoves.Any();
-            bool noBlockingPieces = !stopCheckWithPiece.Any(); // maybe incorrect
+            bool noBlockingPieces = !piecesAbleToStopCheck.Any(); // maybe incorrect
 
             return noValidMoves && noBlockingPieces;
         }
@@ -503,7 +505,7 @@ namespace ChessGame
                 return;
 
             ValueTuple<int, int> key = (piece.X, piece.Y);
-            stopCheckWithPiece[key] = tmpMoves;
+            piecesAbleToStopCheck[key] = tmpMoves;
         }
 
 

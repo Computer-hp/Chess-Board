@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿using System.Diagnostics;
 using WindowHelper;
 
 namespace WinFormsApp1
@@ -16,7 +7,7 @@ namespace WinFormsApp1
     {
         private ChessBoardForm chessBoardForm;
         private Task mainFormTask;
-        private CancellationTokenSource cts;
+        private CancellationTokenSource? cts;
 
 
         public MainMenu()
@@ -44,7 +35,6 @@ namespace WinFormsApp1
             cts = new CancellationTokenSource();
             mainFormTask = Task.Run(() => HandleChessBoard(cts.Token), cts.Token);
         }
-
 
 
         private void HandleChessBoard(CancellationToken token)

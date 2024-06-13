@@ -128,17 +128,17 @@ namespace ChessLogic
         }
 
 
-        public List<(int x, int y)>? CalculateMoves(Piece piece, Directions? direction = null)
+        public List<(int x, int y)> CalculateMoves(Piece piece, Directions? direction = null)
         {
             // ValidMoves.Clear();
 
             switch (piece.Name)
             {
-                case 'P':
-                    return PawnMoves(piece);
+                case 'P': return CalculatePawnMoves(piece);
 
-                case 'N':
-                    return KnightMoves(piece);
+                case 'N': return CalculateKnightMoves(piece);
+
+                default: break;
             }
 
             return ManageLinearDirections(piece, direction);
@@ -151,12 +151,13 @@ namespace ChessLogic
 
         // TODO   En passant
 
-        private List<(int x, int y)>? PawnMoves(Piece pawn)
+        private List<(int x, int y)> CalculatePawnMoves(Piece pawn)
         {
             int movePawnTowardsBlackOrWhite = (pawn.Color == PieceColor.White) ? -1 : 1;
             int destinationRank = pawn.Y + movePawnTowardsBlackOrWhite;
 
-            if (IsSquareOutsideTheBoard((pawn.X, destinationRank))) return null;
+            if (IsSquareOutsideTheBoard((pawn.X, destinationRank))) 
+                return new List<(int x, int y)>();
 
             List<(int x, int y)> validMoves = new();
 
@@ -188,7 +189,7 @@ namespace ChessLogic
 
 
 
-        private List<(int x, int y)>? ManageLinearDirections(Piece piece, Directions? direction)
+        private List<(int x, int y)> ManageLinearDirections(Piece piece, Directions? direction)
         {
             int times = (piece.Name == 'K') ? 1 : BOARD_SIZE;
 
@@ -235,14 +236,14 @@ namespace ChessLogic
         }
 
 
-        private List<(int x, int y)> KnightMoves(Piece piece)
+        private List<(int x, int y)> CalculateKnightMoves(Piece piece)
         {
             List<(int x, int y)> validMoves = new();
 
-            foreach (var move in knightMoves)
+            foreach (var (x, y) in knightMoves)
             {
-                int newX = piece.X + move.x;
-                int newY = piece.Y + move.y;
+                int newX = piece.X + x;
+                int newY = piece.Y + y;
 
                 if (!IsSquareOutsideTheBoard((newX, newY))) validMoves.Add((newX, newY));
             }
@@ -264,27 +265,27 @@ namespace ChessLogic
         }
 
 
-        public string PrintMoves(List<(int x, int y)> validMoves)
+        public static string PrintMoves(List<(int x, int y)> validMoves)
         {
             string output = "";
 
-            foreach (var element in validMoves)
-                output += element.x + "," + element.y + " ";
+            foreach (var (x, y) in validMoves)
+                output += x + "," + y + " ";
 
             return output;
         }
 
 
-        public void PrintMovesThatCanStopCheck(Dictionary<(int x, int y), List<(int validX, int validY)>> stopCheckWithPiece)
+        public static void PrintMovesThatCanStopCheck(Dictionary<(int x, int y), List<(int validX, int validY)>> stopCheckWithPiece)
         {
             Debug.Write("\nStopCheckWithPiece = \n");
             
             foreach (var kvp in stopCheckWithPiece)
             {
-                Debug.Write($"Key: ({kvp.Key.Item1}, {kvp.Key.Item2}), Squares: ");
+                Debug.Write($"Key: ({kvp.Key.y}, {kvp.Key.y}), Squares: ");
 
-                foreach (var square in kvp.Value)
-                    Debug.Write($"{square.validX}, {square.validY} ");
+                foreach (var (validX, validY) in kvp.Value)
+                    Debug.Write($"{validX}, {validY} ");
 
                 Debug.Write('\n');
             }

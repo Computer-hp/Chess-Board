@@ -34,7 +34,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(202, 165);
+            ClientSize = new Size(202, 200);
             ControlBox = false;
             FormBorderStyle = FormBorderStyle.None;
             MaximizeBox = false;
@@ -56,14 +56,17 @@
             Label label = new Label()
             {
                 Text = winnerMessage,
-                Width = buttonWidth,
-                Height = buttonHeight,
-                Left = (formWidth - buttonWidth) / 2,
-                Top = (formHeight - buttonHeight) / 2 - 60, // not sure where it spawns
-
-                ForeColor = Color.Goldenrod,
-                Font = new Font("Arial", 16, FontStyle.Bold)
+                Width = buttonWidth - 5,
+                Height = buttonHeight - 15,
+                BackColor = Color.Peru,
+                ForeColor = Color.White,
+                Font = new Font("Arial", 16, FontStyle.Bold),
+                TextAlign = ContentAlignment.MiddleCenter
             };
+
+            label.Left = (this.ClientSize.Width - label.Width) / 2;
+            label.Top = (this.ClientSize.Height - label.Height) / 2 - 60; 
+
 
             Button button1 = new Button()
             {
@@ -71,7 +74,7 @@
                 Width = buttonWidth,
                 Height = buttonHeight,
                 Left = (formWidth - buttonWidth) / 2,
-                Top = (formHeight - buttonHeight) / 2 - 30,
+                Top = (formHeight - buttonHeight) / 2 - 15,
 
                 BackColor = Color.Peru,
                 ForeColor = Color.White,
@@ -94,6 +97,7 @@
             button1.Click += Button_Click;
             button2.Click += Button_Click;
 
+            Controls.Add(label);
             Controls.Add(button1);
             Controls.Add(button2);
         }

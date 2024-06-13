@@ -1,14 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 // Works also for WPF window.
 
 namespace WindowHelper
 {
+    public static class DarkThemeWindowHelper
+    {
+        public static void ApplyDarkTheme(Form window)
+        {
+            DarkThemeTitleBarHelper.UseImmersiveDarkMode(window.Handle, true);
+            window.BackColor = Color.FromArgb(45, 45, 45);
+            window.ForeColor = Color.White;
+        }
+    }
+
+
     public static class DarkThemeTitleBarHelper
     {
         [DllImport("dwmapi.dll")]
@@ -36,17 +42,6 @@ namespace WindowHelper
         private static bool IsWindows10OrGreater(int build = -1)
         {
             return Environment.OSVersion.Version.Major >= 10 && Environment.OSVersion.Version.Build >= build;
-        }
-    }
-
-
-    public static class DarkThemeWindowHelper
-    {
-        public static void ApplyDarkTheme(Form window)
-        {
-            DarkThemeTitleBarHelper.UseImmersiveDarkMode(window.Handle, true);
-            window.BackColor = Color.FromArgb(45, 45, 45);
-            window.ForeColor = Color.White;
         }
     }
 }
