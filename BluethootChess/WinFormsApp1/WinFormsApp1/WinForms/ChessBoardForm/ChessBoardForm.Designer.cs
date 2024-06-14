@@ -1,6 +1,8 @@
 ﻿using Timer = System.Windows.Forms.Timer;
 using ChessLogic;
 using WindowHelper;
+using System.Diagnostics;
+using System.CodeDom;
 
 namespace WinFormsApp1
 {
@@ -44,22 +46,22 @@ namespace WinFormsApp1
             outerPanel.AutoSize = true;
             outerPanel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             outerPanel.ColumnCount = 2;
-            outerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65.7252045F));
-            outerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 34.27479F));
+            outerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 70.00F));
+            outerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30.00F));
             outerPanel.Dock = DockStyle.Fill;
             outerPanel.Location = new Point(0, 0);
             outerPanel.Name = "outerPanel";
             outerPanel.RowCount = 1;
             outerPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             outerPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
-            outerPanel.Size = new Size(784, 561);
+            outerPanel.Size = new Size(800, 600);
             outerPanel.TabIndex = 0;
             // 
             // ChessBoardForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(formWidth, formHeight);
+            ClientSize = new Size(FORM_WIDTH, FORM_HEIGHT);
             Controls.Add(outerPanel);
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "ChessBoardForm";
@@ -74,6 +76,7 @@ namespace WinFormsApp1
         {
             InitializeBoardGrid();
             InitializeButtons();
+            InitializeGridForTimers();
             InitializeTimerLabels();
             InitializeTimers();
         }
@@ -86,10 +89,10 @@ namespace WinFormsApp1
                 RowCount = BOARD_SIZE,
                 ColumnCount = BOARD_SIZE,
                 CellBorderStyle = TableLayoutPanelCellBorderStyle.Single,
-                Size = new Size(BOARD_SIZE * SQUARE_SIZE + 8, BOARD_SIZE * SQUARE_SIZE + 8),
+                Size = new Size(BOARD_SIZE * SQUARE_SIZE, BOARD_SIZE * SQUARE_SIZE),
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                Padding = new Padding(50, 50, 0, 0)
+                Padding = new Padding(10, SQUARE_SIZE, 0, 0)
             };
 
             for (int i = 0; i < BOARD_SIZE; i++)
@@ -146,28 +149,41 @@ namespace WinFormsApp1
         }
 
 
+        private void InitializeGridForTimers()
+        {
+            gridForTimers = new TableLayoutPanel
+            {
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                ColumnCount = 1,
+                RowCount = 2,
+                Padding = new Padding(0, SQUARE_SIZE, 0, 0),
+                Dock = DockStyle.Fill,
+                Name = "gridForTimers",
+                TabIndex = 0
+            };
+
+            gridForTimers.RowStyles.Add(new RowStyle(SizeType.Absolute, BOARD_SIZE * SQUARE_SIZE - TIMER_LABEL_HEIGHT / 3));
+            gridForTimers.RowStyles.Add(new RowStyle(SizeType.Absolute, TIMER_LABEL_HEIGHT));
+
+            outerPanel.Controls.Add(gridForTimers);
+        }
+
+
         private void InitializeTimerLabels()
         {
-            timerLabel[0] = new Label
+            for (int i = 0; i < N_PLAYERS; i++)
             {
-                Text = "White: 00:00:00",
-                Font = new Font("Arial", 16),
-                Size = new Size(TIMER_WIDTH, TIMER_HEIGHT),
-                Padding = new Padding(0, 50, 0, 0),
-                Dock = DockStyle.Left | DockStyle.Top,
-            };
+                timerLabel[i] = new Label
+                {
+                    Text = (i % 2 == 0) ? "White: 00:00:00" : "Black: 00:00:00",
+                    Font = new Font("Arial", 15),
+                    Size = new Size(TIMER_LABEL_WIDTH, TIMER_LABEL_HEIGHT),
+                    Dock = DockStyle.Left | DockStyle.Top
+                };
 
-            timerLabel[1] = new Label
-            {
-                Text = "Black: 00:00:00",
-                Font = new Font("Arial", 16),
-                Size = new Size(TIMER_WIDTH, TIMER_HEIGHT),
-                Padding = new Padding(0, 50 * 7, 0, 0),
-                Dock = DockStyle.Left,
-            };
-
-            outerPanel.Controls.Add(timerLabel[0], 2, 0);
-            outerPanel.Controls.Add(timerLabel[1], 2, 0);
+                gridForTimers.Controls.Add(timerLabel[i], Math.Abs(i - 1), 0);
+            }
         }
 
 
@@ -196,6 +212,7 @@ namespace WinFormsApp1
 
             string timerText = string.Format(player + "{0:D2}:{1:D2}:{2}",
                                                 time.Minutes, time.Seconds, milliseconds);
+
             timerLabel[turn].Text = timerText;
         }
 
@@ -227,16 +244,15 @@ namespace WinFormsApp1
 
         private int centerX, centerY;
 
-        private const int formWidth = 800;
-        private const int formHeight = 600;
+        private const int FORM_WIDTH = 750;
+        private const int FORM_HEIGHT = 600;
 
-        private const int TIMER_WIDTH = 100;
-        private const int TIMER_HEIGHT = 50;
-        public const int SQUARE_SIZE = 50;
+        private const int TIMER_LABEL_WIDTH = 150;
+        private const int TIMER_LABEL_HEIGHT = 50;
+        public const int SQUARE_SIZE = 60;
 
         private TableLayoutPanel outerPanel;
-        private TableLayoutPanel leftPanel = new();
-        private TableLayoutPanel rightPanel = new();
+        private TableLayoutPanel gridForTimers;
 
 
         private TableLayoutPanel boardGrid;

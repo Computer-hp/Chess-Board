@@ -4,6 +4,7 @@ using WindowHelper;
 using ChessLogic;
 using ChessGame;
 using Events;
+using System.Diagnostics;
 
 
 // TODO  Pin on pieces
@@ -123,6 +124,7 @@ namespace WinFormsApp1
 
         private void ManageClockTick(int blackOrWhiteClock)
         {
+            Debug.Write($"blackOrWhiteClock = {blackOrWhiteClock}");
             timer[blackOrWhiteClock].Stop();
 
             int oppositeClock = Math.Abs(blackOrWhiteClock - 1);
@@ -177,7 +179,9 @@ namespace WinFormsApp1
         // Find the button at the specified position
         private Button? GetButtonAtPosition(ValueTuple<int, int> selectedSquare)
         {
-            foreach (var button in Controls.OfType<Button>())
+            var boardGrid = outerPanel.GetControlFromPosition(0, 0);
+
+            foreach (var button in boardGrid.Controls.OfType<Button>())
                 if (selectedSquare == (ValueTuple<int, int>)button.Tag)
                     return button;
 
