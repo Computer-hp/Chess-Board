@@ -32,8 +32,17 @@ namespace WinFormsApp1
         /// </summary>
 
         private int centerX, centerY;
-        private int chessBoardFormSize = BOARD_SIZE * SQUARE_SIZE;
-        private TableLayoutPanel tableLayoutPanel;
+
+        private const int formWidth = 800;
+        private const int formHeight = 600;
+        
+        public const int SQUARE_SIZE = 60;
+        private const int TIMER_WIDTH = 100;
+        private const int TIMER_HEIGHT = 50;
+
+        private TableLayoutPanel boardGrid;
+        private Label[] timerLabel = new Label[2];
+        private Timer[] timer = new Timer[2];
 
 
         private void InitializeComponent()
@@ -45,53 +54,44 @@ namespace WinFormsApp1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(chessBoardFormSize + 200, chessBoardFormSize + 50);
+            ClientSize = new Size(formWidth, formHeight);
             Icon = (Icon)resources.GetObject("$this.Icon");
-            Text = "Chess Game";
             Name = "ChessBoardForm";
+            StartPosition = FormStartPosition.CenterScreen;
+            Text = "Chess Game";
             Load += Form1_Load;
             ResumeLayout(false);
-            StartPosition = FormStartPosition.CenterScreen;
 
-            centerX = (ClientSize.Width - BOARD_SIZE * SQUARE_SIZE) / 2 - 70;
-            centerY = (ClientSize.Height - BOARD_SIZE * SQUARE_SIZE) / 2;
-
-            InitializeTableLayoutPanel();
-            InitializeChessBoardFormButtons();
-            InitializeChessBoardFormTimers();
-            InitializeTimers();
+            InitializeBoardGrid();
+            InitializeButtons();
         }
 
 
-        private void InitializeTableLayoutPanel()
+        private void InitializeBoardGrid()
         {
-            /*
-            tableLayoutPanel = new TableLayoutPanel();
-            tableLayoutPanel.Dock = DockStyle.Fill;
-            tableLayoutPanel.ColumnCount = BOARD_SIZE;
-            tableLayoutPanel.RowCount = BOARD_SIZE + 1;
-            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
-            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
-            
-            for (int i = 0; i < BOARD_SIZE; i++)
-                tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, SQUARE_SIZE));
-            
-            tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, TIMER_LABEL_HEIGHT));
-            */
+            boardGrid = new TableLayoutPanel
+            {
+                RowCount = BOARD_SIZE,
+                ColumnCount = BOARD_SIZE,
+                CellBorderStyle = TableLayoutPanelCellBorderStyle.Single,
+                Location = new Point(100, 100),
+                Size = new Size(BOARD_SIZE * SQUARE_SIZE + 5, BOARD_SIZE * SQUARE_SIZE + 5),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Bottom | AnchorStyles.Left,
+            };
 
-            tableLayoutPanel = new TableLayoutPanel();
-            tableLayoutPanel.Dock = DockStyle.Fill;
-            tableLayoutPanel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
-            tableLayoutPanel.ColumnCount = BOARD_SIZE;
-            tableLayoutPanel.RowCount = BOARD_SIZE;
-            Controls.Add(tableLayoutPanel);
+            for (int i = 0; i < BOARD_SIZE; i++)
+                boardGrid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+
+            for (int j = 0; j < BOARD_SIZE; j++)
+                boardGrid.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+
+            this.Controls.Add(boardGrid);
         }
 
 
-        private void InitializeChessBoardFormButtons()
+        private void InitializeButtons()
         {
             for (int row = 0; row < BOARD_SIZE; row++)
-
                 for (int col = 0; col < BOARD_SIZE; col++)
                 {
                     Button square = new()
@@ -103,17 +103,19 @@ namespace WinFormsApp1
                         FlatStyle = FlatStyle.Flat,
                         FlatAppearance = { BorderSize = 0 },
                         BackgroundImageLayout = ImageLayout.Zoom,
-                        Tag = (col, row)
+                        Tag = (col, row),
                     };
 
                     var pieceAttributes = GetPieceNotation(col, row);
 
-                    square.BackgroundImage = (pieceAttributes is not null) 
+                    square.BackgroundImage = (pieceAttributes is not null)
                                                 ? PieceImages.GetPieceImage(pieceAttributes.Value.color, pieceAttributes.Value.notation)
                                                 : null;
 
                     square.Click += Button_Click;
-                    tableLayoutPanel.Controls.Add(square, col, row);
+                    // this.Controls.Add(square);
+                    
+                    boardGrid.Controls.Add(square, col, row);
                 }
         }
 
@@ -133,14 +135,13 @@ namespace WinFormsApp1
         }
 
 
-        private void InitializeChessBoardFormTimers()
+        private void InitializeTimerLabels()
         {
-            /*
             timerLabel[0] = new Label
             {
                 Text = "White: 00:00:00",
                 Font = new Font("Arial", 18),
-                Location = new Point(centerX + BOARD_SIZE * SQUARE_SIZE - 10, ClientSize.Height - SQUARE_SIZE / 2 - 10),
+                // Location = new Point(centerX + BOARD_SIZE * SQUARE_SIZE - 10, ClientSize.Height - SQUARE_SIZE / 2 - 10),
                 AutoSize = true
             };
 
@@ -148,30 +149,42 @@ namespace WinFormsApp1
             {
                 Text = "Black: 00:00:00",
                 Font = new Font("Arial", 18),
-                Location = new Point(centerX + BOARD_SIZE * SQUARE_SIZE - 10, centerY),
+                // Location = new Point(centerX + BOARD_SIZE * SQUARE_SIZE - 10, centerY),
                 AutoSize = true
             };
 
             Controls.Add(timerLabel[0]);
             Controls.Add(timerLabel[1]);
-            */
-/*
-            for (int i = 0; i < N_PLAYERS; i++)
-            {
-                timerLabel[i] = new Label
-                {
-                    Text = i == 0 ? "White: 00:00:00" : "Black: 00:00:00",
-                    Font = new Font("Arial", 18),
-                    AutoSize = true,
-                    TextAlign = ContentAlignment.MiddleCenter
-                };
-
-                // Add timer labels to the TableLayoutPanel
-                tableLayoutPanel.Controls.Add(timerLabel[i], i == 0 ? 0 : 1, BOARD_SIZE); // Place labels at bottom right corner
-            }
-*/
         }
 
+
+        private void InitializeTimers()
+        {
+            for (int i = 0; i < N_PLAYERS; i++)
+            {
+                timer[i] = new Timer { Interval = 100 };
+                timer[i].Tick += Timer_Tick;
+            }
+        }
+
+
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            Timer timer = sender as Timer;
+            int turn = (int)timer.Tag;
+
+            secondsElapsed[turn]++;
+
+            TimeSpan time = TimeSpan.FromMilliseconds(secondsElapsed[turn] * timer.Interval);
+
+            string player = (turn == 0) ? "White: " : "Black: ";
+
+            string milliseconds = (time.Milliseconds / 10).ToString("D2");
+
+            string timerText = string.Format(player + "{0:D2}:{1:D2}:{2}",
+                                                time.Minutes, time.Seconds, milliseconds);
+            timerLabel[turn].Text = timerText;
+        }
 
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -194,25 +207,6 @@ namespace WinFormsApp1
                 IsClosed = true;
                 this.Close();
             }
-        }
-
-
-        private void Timer_Tick(object sender, EventArgs e)
-        {
-            Timer timer = sender as Timer;
-            int turn = (int)timer.Tag;
-
-            secondsElapsed[turn]++;
-
-            TimeSpan time = TimeSpan.FromMilliseconds(secondsElapsed[turn] * timer.Interval);
-
-            string player = (turn == 0) ? "White: " : "Black: ";
-
-            string milliseconds = (time.Milliseconds / 10).ToString("D2");
-
-            string timerText = string.Format(player + "{0:D2}:{1:D2}:{2}", 
-                                                time.Minutes, time.Seconds, milliseconds);
-            timerLabel[turn].Text = timerText;
         }
 
         #endregion

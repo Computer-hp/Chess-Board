@@ -20,13 +20,9 @@ namespace WinFormsApp1
     {
         private const int BOARD_SIZE = 8;
         private const int N_PLAYERS = 2;
-        public const int SQUARE_SIZE = 60;
-        public const int TIMER_LABEL_HEIGHT = 30;
 
         private int[] secondsElapsed = new int[N_PLAYERS];
 
-        private Label[] timerLabel = new Label[2];
-        private Timer[] timer = new Timer[2];
 
         private Color? previousButtonColor = null;
         private Button? lastClickedButton = null;
@@ -61,16 +57,6 @@ namespace WinFormsApp1
         }
 
 
-        private void InitializeTimers()
-        {
-            for (int i = 0; i < N_PLAYERS; i++)
-            {
-                timer[i] = new Timer { Interval = 100 };
-                timer[i].Tick += Timer_Tick;
-            }
-        }
-
-
         private void Button_Click(object sender, EventArgs e)
         {
             Button clickedButton = (Button)sender;
@@ -91,7 +77,7 @@ namespace WinFormsApp1
             else if (!game.IsLastClickedButtonNull)
                 lastClickedButton = clickedButton;
         }
-        
+
 
         // PROBLEM: example --> clicking second button after first doesnt' remove focus of the first
         private void ManageClickedButton(Button clickedButton, (int x, int y) destinationSquare)
@@ -135,13 +121,13 @@ namespace WinFormsApp1
 
 
         private void ManageClockTick(int blackOrWhiteClock)
-        {                                         
+        {
             timer[blackOrWhiteClock].Stop();
 
             int oppositeClock = Math.Abs(blackOrWhiteClock - 1);
             timer[oppositeClock].Tag = oppositeClock;
 
-            timerLabel[oppositeClock].BeginInvoke((MethodInvoker)delegate 
+            timerLabel[oppositeClock].BeginInvoke((MethodInvoker)delegate
             {
                 timer[oppositeClock].Start();
             });
@@ -160,7 +146,7 @@ namespace WinFormsApp1
             int rookY = kingDest.y;
 
             Button? rookSquare = GetButtonAtPosition((rookX, rookY)); // rookDestination is not enough.
-                                                                                 // need to recognise wheather O_O or O_O_O
+                                                                      // need to recognise wheather O_O or O_O_O
             rookSquare!.BackgroundImage = null;
 
             Bitmap rookImage = PieceImages.GetPieceImage(color, 'R');
@@ -178,14 +164,14 @@ namespace WinFormsApp1
 
         private void ShowRestartForm(string winner)
         {
-            var popUp = new RestartForm (winner) { StartPosition = FormStartPosition.CenterParent };
+            var popUp = new RestartForm(winner) { StartPosition = FormStartPosition.CenterParent };
             popUp.ShowDialog(this);
 
             if (RestartForm.NewGame) IsRestarted = true;
 
             else if (RestartForm.MainMenu) this.Close();
         }
-        
+
 
         // Find the button at the specified position
         private Button? GetButtonAtPosition(ValueTuple<int, int> selectedSquare)
