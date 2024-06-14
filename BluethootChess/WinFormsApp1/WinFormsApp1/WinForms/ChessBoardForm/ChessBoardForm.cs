@@ -38,6 +38,7 @@ namespace WinFormsApp1
             game = new Game();
             InitializeEvents();
             InitializeComponent();
+            InitializeOtherComponents();
             DarkThemeWindowHelper.ApplyDarkTheme(this);
         }
 

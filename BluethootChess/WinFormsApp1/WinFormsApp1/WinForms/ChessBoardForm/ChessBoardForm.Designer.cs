@@ -31,39 +31,51 @@ namespace WinFormsApp1
         ///  the contents of this method with the code editor.
         /// </summary>
 
-        private int centerX, centerY;
-
-        private const int formWidth = 800;
-        private const int formHeight = 600;
-        
-        public const int SQUARE_SIZE = 60;
-        private const int TIMER_WIDTH = 100;
-        private const int TIMER_HEIGHT = 50;
-
-        private TableLayoutPanel boardGrid;
-        private Label[] timerLabel = new Label[2];
-        private Timer[] timer = new Timer[2];
 
 
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ChessBoardForm));
+            outerPanel = new TableLayoutPanel();
             SuspendLayout();
+            // 
+            // outerPanel
+            // 
+            outerPanel.AutoSize = true;
+            outerPanel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            outerPanel.ColumnCount = 2;
+            outerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65.7252045F));
+            outerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 34.27479F));
+            outerPanel.Dock = DockStyle.Fill;
+            outerPanel.Location = new Point(0, 0);
+            outerPanel.Name = "outerPanel";
+            outerPanel.RowCount = 1;
+            outerPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            outerPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            outerPanel.Size = new Size(784, 561);
+            outerPanel.TabIndex = 0;
             // 
             // ChessBoardForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(formWidth, formHeight);
+            Controls.Add(outerPanel);
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "ChessBoardForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Chess Game";
             Load += Form1_Load;
             ResumeLayout(false);
+            PerformLayout();
+        }
 
+        private void InitializeOtherComponents()
+        {
             InitializeBoardGrid();
             InitializeButtons();
+            InitializeTimerLabels();
+            InitializeTimers();
         }
 
 
@@ -74,9 +86,10 @@ namespace WinFormsApp1
                 RowCount = BOARD_SIZE,
                 ColumnCount = BOARD_SIZE,
                 CellBorderStyle = TableLayoutPanelCellBorderStyle.Single,
-                Location = new Point(100, 100),
-                Size = new Size(BOARD_SIZE * SQUARE_SIZE + 5, BOARD_SIZE * SQUARE_SIZE + 5),
-                Anchor = AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Bottom | AnchorStyles.Left,
+                Size = new Size(BOARD_SIZE * SQUARE_SIZE + 8, BOARD_SIZE * SQUARE_SIZE + 8),
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                Padding = new Padding(50, 50, 0, 0)
             };
 
             for (int i = 0; i < BOARD_SIZE; i++)
@@ -85,7 +98,7 @@ namespace WinFormsApp1
             for (int j = 0; j < BOARD_SIZE; j++)
                 boardGrid.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
-            this.Controls.Add(boardGrid);
+            outerPanel.Controls.Add(boardGrid, 0, 0);
         }
 
 
@@ -106,21 +119,19 @@ namespace WinFormsApp1
                         Tag = (col, row),
                     };
 
-                    var pieceAttributes = GetPieceNotation(col, row);
+                    var pieceAttributes = GetPieceAttributes(col, row);
 
                     square.BackgroundImage = (pieceAttributes is not null)
                                                 ? PieceImages.GetPieceImage(pieceAttributes.Value.color, pieceAttributes.Value.notation)
                                                 : null;
 
                     square.Click += Button_Click;
-                    // this.Controls.Add(square);
-                    
                     boardGrid.Controls.Add(square, col, row);
                 }
         }
 
 
-        private (PieceColor color, char notation)? GetPieceNotation(int col, int row)
+        private (PieceColor color, char notation)? GetPieceAttributes(int col, int row)
         {
             switch (row)
             {
@@ -140,21 +151,23 @@ namespace WinFormsApp1
             timerLabel[0] = new Label
             {
                 Text = "White: 00:00:00",
-                Font = new Font("Arial", 18),
-                // Location = new Point(centerX + BOARD_SIZE * SQUARE_SIZE - 10, ClientSize.Height - SQUARE_SIZE / 2 - 10),
-                AutoSize = true
+                Font = new Font("Arial", 16),
+                Size = new Size(TIMER_WIDTH, TIMER_HEIGHT),
+                Padding = new Padding(0, 50, 0, 0),
+                Dock = DockStyle.Left | DockStyle.Top,
             };
 
             timerLabel[1] = new Label
             {
                 Text = "Black: 00:00:00",
-                Font = new Font("Arial", 18),
-                // Location = new Point(centerX + BOARD_SIZE * SQUARE_SIZE - 10, centerY),
-                AutoSize = true
+                Font = new Font("Arial", 16),
+                Size = new Size(TIMER_WIDTH, TIMER_HEIGHT),
+                Padding = new Padding(0, 50 * 7, 0, 0),
+                Dock = DockStyle.Left,
             };
 
-            Controls.Add(timerLabel[0]);
-            Controls.Add(timerLabel[1]);
+            outerPanel.Controls.Add(timerLabel[0], 2, 0);
+            outerPanel.Controls.Add(timerLabel[1], 2, 0);
         }
 
 
@@ -187,6 +200,7 @@ namespace WinFormsApp1
         }
 
 
+
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (IsRestarted)
@@ -210,5 +224,23 @@ namespace WinFormsApp1
         }
 
         #endregion
+
+        private int centerX, centerY;
+
+        private const int formWidth = 800;
+        private const int formHeight = 600;
+
+        private const int TIMER_WIDTH = 100;
+        private const int TIMER_HEIGHT = 50;
+        public const int SQUARE_SIZE = 50;
+
+        private TableLayoutPanel outerPanel;
+        private TableLayoutPanel leftPanel = new();
+        private TableLayoutPanel rightPanel = new();
+
+
+        private TableLayoutPanel boardGrid;
+        private Label[] timerLabel = new Label[2];
+        private Timer[] timer = new Timer[2];
     }
 }
