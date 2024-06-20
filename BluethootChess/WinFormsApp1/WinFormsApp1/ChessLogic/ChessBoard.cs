@@ -282,7 +282,7 @@ namespace ChessLogic
             
             foreach (var kvp in stopCheckWithPiece)
             {
-                Debug.Write($"Key: ({kvp.Key.y}, {kvp.Key.y}), Squares: ");
+                Debug.Write($"Key: ({kvp.Key.x}, {kvp.Key.y}), Squares: ");
 
                 foreach (var (validX, validY) in kvp.Value)
                     Debug.Write($"{validX}, {validY} ");
