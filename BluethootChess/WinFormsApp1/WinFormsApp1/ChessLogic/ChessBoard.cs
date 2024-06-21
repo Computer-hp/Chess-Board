@@ -42,12 +42,8 @@ namespace ChessLogic
 
 
         public static readonly char[] Pieces = { 'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R' };
-
-        // maybe is better to use HashSet then List, for ValidMoves and CopyMoves
-//        public List<(int x, int y)> ValidMoves { get; set; } = new();
-
-
         public int MovePawnTowardsBlackOrWhite { get; set; } = -1;
+
 
         public Piece this[int y, int x]
         {
@@ -62,7 +58,6 @@ namespace ChessLogic
                 board[y, x] = value; 
             }
         }
-
 
         public Piece this[(int x, int y) destSquare]
         {

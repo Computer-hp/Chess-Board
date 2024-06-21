@@ -108,10 +108,14 @@ namespace ChessGame
         // then this method is fine
 
             ManageSituationAfterPieceMovement(destinationSquare);
+
+            if (!isCheck && IsDraw()) OnCheckmate(new CheckmateEventArgs("Draw"));
            
+
+        // #####
         // final things to do
 
-            chessBoard.MovePawnTowardsBlackOrWhite = -1 * (turn * 2 - 1);  
+            chessBoard.MovePawnTowardsBlackOrWhite = -1 * (turn * 2 - 1);
             // validMoves.Clear(); // not neccesary
 
             HasLastClickedButtonChangedColor = true;
@@ -120,6 +124,8 @@ namespace ChessGame
             turn = (turn + 1) % 2;
             selectedPiece = null;
             ChessBoard.PrintMovesThatCanStopCheck(piecesAbleToStopCheck);
+
+        // #####
         }
         
 
@@ -212,13 +218,6 @@ namespace ChessGame
         }
 
 
-        protected virtual void OnPieceMovement(UIPieceMovementEventArgs e1, UIClockTickEventArgs e2)
-        {
-            UIPieceMovement?.Invoke(this, e1);
-            UIClockTick?.Invoke(this, e2);
-        }
-
-
         private void ManageSituationAfterPieceMovement((int x, int y) destinationSquare)
         {
             var lastMovedPiece = chessBoard[destinationSquare.y, destinationSquare.x];
@@ -232,26 +231,47 @@ namespace ChessGame
 
             Piece opponentKing = chessBoard[whiteAndBlackKingPos[oppositeKingIdx]];
 
-            if (!HasPieceGivenCheck((opponentKing.X, opponentKing.Y), destinationSquare))
-                return;
+
+            if (!HasPieceGivenCheck((opponentKing.X, opponentKing.Y), destinationSquare)) return;
 
             if (lastMovedPiece.Name == 'P')
                 validMoves.RemoveAll(square => square.y == lastMovedPiece.Y + chessBoard.MovePawnTowardsBlackOrWhite);
 
             ManageSituationAfterCheck(opponentKing);
 
-            if (!IsCheckmate()) // should also add Draw
-                return;
+            if (!IsCheckmate()) return; // should also add Draw 
 
             OnCheckmate(new CheckmateEventArgs(currentPlayer[turn].ToString()));
         }
 
 
-        protected virtual void OnCheckmate(CheckmateEventArgs e)
+
+        private bool IsDraw()
         {
-            Checkmate?.Invoke(this, e);
+            int oppositeColor = (turn + 1) % 2;
+
+            foreach (var piece in chessBoard)
+            {
+                if (piece == null || piece.Color == currentPlayer[turn]) continue;
+
+                validMoves = chessBoard.CalculateMoves(piece);
+                RemoveMovesThatTargetPiecesWithSameColor(validMoves, currentPlayer[oppositeColor]);
+
+                // have to remove moves that protect same color pieces, remove pawn moves, king moves, ...
+
+                if (validMoves.Count > 0) return false;
+            }
+
+            return true;
+        }
+
+
+        private void RemoveMovesThatTargetPiecesWithSameColor(List<(int x, int y)> moves, PieceColor color)
+        {
+            moves = moves.Where(move => chessBoard[move] == null || chessBoard[move].Color != color).ToList();
         }
         
+
 
         private bool HasPieceGivenCheck((int x, int y) opponentKingPos, (int x, int y) destinationSquare)
         {
@@ -418,7 +438,7 @@ namespace ChessGame
 
 
 
-        private void RemoveInvalidSquaresOfKing(Piece opponentKing)
+        private void RemoveInvalidSquaresOfKing(Piece king)
         {
             List<(int x, int y)> tmpKingMoves = new();
             tmpKingMoves.AddRange(validMoves);
@@ -426,8 +446,7 @@ namespace ChessGame
             foreach (var piece in chessBoard)
             {
                 if (piece == null || 
-                    piece.Color == opponentKing.Color ||
-                    piece.Name == opponentKing.Name)
+                    piece.Color == king.Color /*|| piece.Name == king.Name*/)  // commented this so when moving king to opponent king they can't move closer then one square.
                     continue;
 
 
@@ -436,8 +455,8 @@ namespace ChessGame
                 // to remove straight moves of the PAWN, by one square and/or two squares in case the pawn hasn't been moved yet
                 if (piece.Name == 'P')
                 {
-                    RemoveSquaresFromList(validMoves, (piece.X, piece.Y + chessBoard.MovePawnTowardsBlackOrWhite));
-                    RemoveSquaresFromList(validMoves, (piece.X, piece.Y + chessBoard.MovePawnTowardsBlackOrWhite * 2));
+                    RemoveSquaresFromList(validMoves, (piece.X, piece.Y - chessBoard.MovePawnTowardsBlackOrWhite));
+                    RemoveSquaresFromList(validMoves, (piece.X, piece.Y - chessBoard.MovePawnTowardsBlackOrWhite * 2));
                 }
 
                 tmpKingMoves.RemoveAll(square => IsSquareInList(validMoves, square)); // strange but ok
@@ -446,7 +465,7 @@ namespace ChessGame
             validMoves.Clear();  // if this is removed than ValidMoves will contain the moves of the piece that protects the one that gave check
             validMoves.AddRange(tmpKingMoves);
 
-            CheckPiecesNearKing(opponentKing);
+            CheckPiecesNearKing(king);
         }
 
 
@@ -455,22 +474,23 @@ namespace ChessGame
             and removes squares where king is not able to move.
         */
 
-        private void CheckPiecesNearKing(Piece opponentKing)
+        private void CheckPiecesNearKing(Piece king)
         {
-            for (int x = opponentKing.X - 1; x < (opponentKing.X + 2); x++)
-                for (int y = opponentKing.Y - 1; y < (opponentKing.Y + 2); y++)
+            for (int x = king.X - 1; x < (king.X + 2); x++)
+                for (int y = king.Y - 1; y < (king.Y + 2); y++)
                     if (!ChessBoard.IsSquareOutsideTheBoard((x, y)) && !chessBoard.IsSquareNull((x, y)))
-                        FindInvalidCapturesKing(opponentKing, chessBoard[y, x]);
+                        FindInvalidCapturesKing(king, chessBoard[y, x]);
+
+
+            // ignore the center square, where king is placed. Check the frame.
         }
-
-
         
 
-        private void FindInvalidCapturesKing(Piece opponentKing, Piece pieceNearKing)
+        private void FindInvalidCapturesKing(Piece king, Piece pieceNearKing)
         {
-            if (opponentKing.Equals(pieceNearKing)) return;
+            if (king.Equals(pieceNearKing)) return;
 
-            if (opponentKing.Color == pieceNearKing.Color) // if a piece with the same color is placed near the king
+            if (king.Color == pieceNearKing.Color) // if a piece with the same color is placed near the king
             {
                 RemoveSquaresFromList(validMoves, (pieceNearKing.X, pieceNearKing.Y));
                 return;
@@ -557,11 +577,6 @@ namespace ChessGame
         }
 
 
-        protected virtual void OnCastle(CastleEventArgs e)
-        {
-            Castle?.Invoke(this, e);
-        }
-
 
         // problem: if i return back the rook it probably cocount's as not yet moved
         private void ManageFirstRookMove((int x, int y ) rookPosition)
@@ -635,6 +650,27 @@ namespace ChessGame
         private bool IsPieceSameColorAsPlayer((int x, int y) destinationSquare)
         {
             return chessBoard[destinationSquare.y, destinationSquare.x].Color == currentPlayer[turn];
+        }
+
+
+
+
+        protected virtual void OnCastle(CastleEventArgs e)
+        {
+            Castle?.Invoke(this, e);
+        }
+
+
+        protected virtual void OnCheckmate(CheckmateEventArgs e)
+        {
+            Checkmate?.Invoke(this, e);
+        }
+
+
+        protected virtual void OnPieceMovement(UIPieceMovementEventArgs e1, UIClockTickEventArgs e2)
+        {
+            UIPieceMovement?.Invoke(this, e1);
+            UIClockTick?.Invoke(this, e2);
         }
     }
 }
