@@ -53,8 +53,12 @@ namespace ChessUI
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            rowStyles = outerPanel.RowStyles;
+            columnStyles = outerPanel.ColumnStyles;
+
             this.FormClosing += Form1_FormClosing;
         }
+
 
 
         private void Button_Click(object sender, EventArgs e)
@@ -185,5 +189,106 @@ namespace ChessUI
 
             return null;
         }
+
+
+
+        bool resizing = false;
+        int colindex = -1;
+        int rowindex = -1;
+
+        TableLayoutRowStyleCollection rowStyles;
+        TableLayoutColumnStyleCollection columnStyles;
+        
+
+
+        private void outerPanel_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                rowStyles = outerPanel.RowStyles;
+                columnStyles = outerPanel.ColumnStyles;
+                resizing = true;
+            }
+        }
+
+
+        private void outerPanel_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (!resizing)
+            {
+                float width = 0;
+                float height = 0;
+                //for rows
+                for (int i = 0; i < rowStyles.Count; i++)
+                {
+                    height += rowStyles[i].Height;
+                    if (e.Y > height - 3 && e.Y < height + 3)
+                    {
+                        rowindex = i;
+                        outerPanel.Cursor = Cursors.HSplit;
+                        break;
+                    }
+                    else
+                    {
+                        rowindex = -1;
+                        outerPanel.Cursor = Cursors.Default;
+                    }
+                }
+                //for columns
+                for (int i = 0; i < columnStyles.Count; i++)
+                {
+                    width += columnStyles[i].Width;
+                    if (e.X > width - 3 && e.X < width + 3)
+                    {
+                        colindex = i;
+                        if (rowindex > -1)
+                            outerPanel.Cursor = Cursors.Cross;
+                        else
+                            outerPanel.Cursor = Cursors.VSplit;
+                        break;
+                    }
+                    else
+                    {
+                        colindex = -1;
+                        if (rowindex == -1)
+                            outerPanel.Cursor = Cursors.Default;
+                    }
+                }
+            }
+            if (resizing && (colindex>-1 || rowindex > -1))
+            {
+                float width = e.X;
+                float height = e.Y;
+                if (colindex > -1)
+                {
+                    for (int i = 0; i < colindex; i++)
+                    {
+                        width -= columnStyles[i].Width;
+                    }
+                    columnStyles[colindex].SizeType = SizeType.Absolute;
+                    columnStyles[colindex].Width = width;
+                }
+                if (rowindex > -1)
+                {
+                    for (int i = 0; i < rowindex; i++)
+                    {
+                        height -= rowStyles[i].Height;
+                    }
+
+                    rowStyles[rowindex].SizeType = SizeType.Absolute;
+                    rowStyles[rowindex].Height = height;
+                }
+            }
+        }
+
+        private void outerPanel_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                resizing = false;
+                outerPanel.Cursor = Cursors.Default;
+            }
+        }
+        
     }
 }

@@ -70,11 +70,11 @@ namespace ChessUI
         }
 
 
-        private void ChessBoardForm_FormClosed(object sender, FormClosedEventArgs e)
+        /*private void ChessBoardForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             if (chessBoardForm.IsClosed)
                 this.Invoke(new Action(this.Show));
-        }
+        }*/
 
 
         private void Button_ConnectBluetooth(object sender, EventArgs e)
