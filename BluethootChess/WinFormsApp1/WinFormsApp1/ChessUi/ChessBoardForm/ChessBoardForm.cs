@@ -47,7 +47,7 @@ namespace WinFormsApp1
         private void InitializeEvents()
         {
             game.Castle += Game_Castle!;
-            game.Checkmate += Game_Checkmate!;
+            game.GameFinish += Game_Finish!;
             game.UIPieceMovement += UI_Piece_Movement!;
             game.UIClockTick += UI_Clock_Tick!;
         }
@@ -159,7 +159,7 @@ namespace WinFormsApp1
         }
 
 
-        private void Game_Checkmate(object sender, CheckmateEventArgs e)
+        private void Game_Finish(object sender, GameFinishEventArgs e)
         {
             ShowRestartForm(e.Winner);
         }

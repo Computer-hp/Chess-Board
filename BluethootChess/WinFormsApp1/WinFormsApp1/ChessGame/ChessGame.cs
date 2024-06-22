@@ -43,7 +43,7 @@ namespace ChessGame
         public bool HasLastClickedButtonChangedColor = true;
 
         public event EventHandler<CastleEventArgs>?           Castle;
-        public event EventHandler<CheckmateEventArgs>?        Checkmate;
+        public event EventHandler<GameFinishEventArgs>?        GameFinish;
         public event EventHandler<UIPieceMovementEventArgs>?  UIPieceMovement;
         public event EventHandler<UIClockTickEventArgs>?      UIClockTick;
 
@@ -109,7 +109,7 @@ namespace ChessGame
 
             ManageSituationAfterPieceMovement(destinationSquare);
 
-            if (!isCheck && IsDraw()) OnCheckmate(new CheckmateEventArgs("Draw"));
+            if (!isCheck && IsDraw()) OnGameFinish(new GameFinishEventArgs("Draw"));
            
 
         // #####
@@ -152,7 +152,8 @@ namespace ChessGame
 
             if (selectedPiece.Name != 'K') return;
 
-            RemoveInvalidSquaresOfKing(selectedPiece);
+            RemoveKingSquaresCoveredByPieces(selectedPiece);
+            CheckPiecesNearKing(selectedPiece);
             
             if (!O_O_O[turn])  
                 O_O_O[turn] = IsCastleLegal((int)Files.bFile, (int)Files.eFile, isRook_A_FirstMove[turn]);
@@ -241,7 +242,7 @@ namespace ChessGame
 
             if (!IsCheckmate()) return; // should also add Draw 
 
-            OnCheckmate(new CheckmateEventArgs(currentPlayer[turn].ToString()));
+            OnGameFinish(new GameFinishEventArgs(currentPlayer[turn].ToString()));
         }
 
 
@@ -255,7 +256,13 @@ namespace ChessGame
                 if (piece == null || piece.Color == currentPlayer[turn]) continue;
 
                 validMoves = chessBoard.CalculateMoves(piece);
-                RemoveMovesThatTargetPiecesWithSameColor(validMoves, currentPlayer[oppositeColor]);
+                RemoveMovesThatTargetPiecesOfSameColor(validMoves, currentPlayer[oppositeColor]);
+
+                if (piece.Name == 'K')
+                {
+                    RemoveKingSquaresCoveredByPieces(piece);
+                    CheckPiecesNearKing(piece);
+                }
 
                 // have to remove moves that protect same color pieces, remove pawn moves, king moves, ...
 
@@ -266,11 +273,6 @@ namespace ChessGame
         }
 
 
-        private void RemoveMovesThatTargetPiecesWithSameColor(List<(int x, int y)> moves, PieceColor color)
-        {
-            moves = moves.Where(move => chessBoard[move] == null || chessBoard[move].Color != color).ToList();
-        }
-        
 
 
         private bool HasPieceGivenCheck((int x, int y) opponentKingPos, (int x, int y) destinationSquare)
@@ -317,11 +319,12 @@ namespace ChessGame
                 if (piece.Name == 'P') ManageInvalidDiagonalPawnMoves(piece);
 
                 RemoveSquaresFromList(validMoves, (opponentKing.X, opponentKing.Y));
-                StopCheck(piece);
+                CheckIfPieceIsAbleToStopCheck(piece);
             }
 
-            validMoves = chessBoard.CalculateMoves(opponentKing);
-            RemoveInvalidSquaresOfKing(opponentKing);
+            validMoves = chessBoard.CalculateMoves(opponentKing); // this is done to check later if king is able to move
+            RemoveKingSquaresCoveredByPieces(opponentKing);
+            CheckPiecesNearKing(opponentKing);
         }
 
 
@@ -438,7 +441,7 @@ namespace ChessGame
 
 
 
-        private void RemoveInvalidSquaresOfKing(Piece king)
+        private void RemoveKingSquaresCoveredByPieces(Piece king)
         {
             List<(int x, int y)> tmpKingMoves = new();
             tmpKingMoves.AddRange(validMoves);
@@ -465,66 +468,61 @@ namespace ChessGame
             validMoves.Clear();  // if this is removed than ValidMoves will contain the moves of the piece that protects the one that gave check
             validMoves.AddRange(tmpKingMoves);
 
-            CheckPiecesNearKing(king);
+            //CheckPiecesNearKing(king);
         }
 
 
         /*
-            Checks each square next to the king, 8 squares in total,
+            Checks each square next to the king, 9 squares in total,
             and removes squares where king is not able to move.
         */
 
         private void CheckPiecesNearKing(Piece king)
         {
-            for (int x = king.X - 1; x < (king.X + 2); x++)
-                for (int y = king.Y - 1; y < (king.Y + 2); y++)
-                    if (!ChessBoard.IsSquareOutsideTheBoard((x, y)) && !chessBoard.IsSquareNull((x, y)))
-                        FindInvalidCapturesKing(king, chessBoard[y, x]);
+            RemoveMovesThatTargetPiecesOfSameColor(validMoves, king.Color);
+
+            foreach (var square in validMoves)
+                if (!chessBoard.IsSquareNull(square))
+                    RemoveIllegalKingCaptures(king, square);
 
 
-            // ignore the center square, where king is placed. Check the frame.
-        }
-        
-
-        private void FindInvalidCapturesKing(Piece king, Piece pieceNearKing)
-        {
-            if (king.Equals(pieceNearKing)) return;
-
-            if (king.Color == pieceNearKing.Color) // if a piece with the same color is placed near the king
+            void RemoveIllegalKingCaptures(Piece king, (int x, int y) pieceNearKingPos)
             {
-                RemoveSquaresFromList(validMoves, (pieceNearKing.X, pieceNearKing.Y));
-                return;
-            }
+                List<ValueTuple<int, int>> tmpKingMoves = new();
+                tmpKingMoves.AddRange(validMoves);
+
+                // controls whether the piece near king is protected by another piece,
+                // so the king can't capture it
+
+                if (IsPieceNearKingProtected(pieceNearKingPos))
+                    RemoveSquaresFromList(tmpKingMoves, pieceNearKingPos);
+
+                validMoves.Clear();
+                validMoves.AddRange(tmpKingMoves);
 
 
-            List<ValueTuple<int, int>> tmpKingMoves = new();
-            tmpKingMoves.AddRange(validMoves);
-
-            // controls whether the piece near king is protected by another piece,
-            // so the king can't capture it
-            foreach (var piece in chessBoard)
-            {
-                if (piece == null || 
-                    (piece.X == pieceNearKing.X && piece.Y == pieceNearKing.Y) ||
-                    piece.Color != pieceNearKing.Color)
-                    continue;
-
-                validMoves = chessBoard.CalculateMoves(piece);
-
-                if (IsSquareInList(validMoves, (pieceNearKing.X, pieceNearKing.Y)))
+                bool IsPieceNearKingProtected((int x, int y) pieceNearKingPos)
                 {
-                    RemoveSquaresFromList(tmpKingMoves, (pieceNearKing.X, pieceNearKing.Y));
-                    break;
+                    foreach (var piece in chessBoard)
+                    {
+                        if (piece == null || 
+                            (piece.X == pieceNearKingPos.x && piece.Y == pieceNearKingPos.y) ||
+                            piece.Color == king.Color)
+                            continue;
+
+                        validMoves = chessBoard.CalculateMoves(piece);
+
+                        if (IsSquareInList(validMoves, pieceNearKingPos)) return true;
+                    }
+
+                    return false;
                 }
             }
-
-            validMoves.Clear();
-            validMoves.AddRange(tmpKingMoves);
         }
 
 
 
-        private void StopCheck(Piece piece)
+        private void CheckIfPieceIsAbleToStopCheck(Piece piece)
         {
             List<ValueTuple<int, int>> tmpMoves = new();
 
@@ -653,6 +651,11 @@ namespace ChessGame
         }
 
 
+        private void RemoveMovesThatTargetPiecesOfSameColor(List<(int x, int y)> moves, PieceColor color)
+        {
+            moves = moves.Where(move => chessBoard.IsSquareNull(move) || chessBoard[move].Color != color).ToList();
+        }
+
 
 
         protected virtual void OnCastle(CastleEventArgs e)
@@ -661,9 +664,9 @@ namespace ChessGame
         }
 
 
-        protected virtual void OnCheckmate(CheckmateEventArgs e)
+        protected virtual void OnGameFinish(GameFinishEventArgs e)
         {
-            Checkmate?.Invoke(this, e);
+            GameFinish?.Invoke(this, e);
         }
 
 

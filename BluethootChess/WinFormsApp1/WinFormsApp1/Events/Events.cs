@@ -8,12 +8,12 @@ using WindowHelper;
 
 namespace Events
 {
-    public class CheckmateEventArgs : EventArgs
+    public class GameFinishEventArgs : EventArgs
     {
         public readonly string Winner;
 
 
-        public CheckmateEventArgs(string winner)
+        public GameFinishEventArgs(string winner)
         {
             Winner = winner;
         }
