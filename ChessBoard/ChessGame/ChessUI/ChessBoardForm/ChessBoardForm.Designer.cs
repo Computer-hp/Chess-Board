@@ -37,6 +37,8 @@ namespace ChessUI
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ChessBoardForm));
             outerPanel = new TableLayoutPanel();
+            formPanel = new TableLayoutPanel();
+            formPanel.SuspendLayout();
             SuspendLayout();
             // 
             // outerPanel
@@ -46,27 +48,45 @@ namespace ChessUI
             outerPanel.ColumnCount = 2;
             outerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             outerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            outerPanel.Location = new Point(0, 0);
+            outerPanel.Location = new Point(43, 43);
             outerPanel.Name = "outerPanel";
             outerPanel.RowCount = 1;
             outerPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             outerPanel.Size = new Size(0, 0);
             outerPanel.TabIndex = 0;
             // 
+            // formPanel
+            // 
+            formPanel.ColumnCount = 3;
+            formPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 40F));
+            formPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 630F));
+            formPanel.ColumnStyles.Add(new ColumnStyle());
+            formPanel.Controls.Add(outerPanel, 1, 1);
+            formPanel.Dock = DockStyle.Fill;
+            formPanel.Location = new Point(0, 0);
+            formPanel.Name = "formPanel";
+            formPanel.RowCount = 3;
+            formPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
+            formPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 480F));
+            formPanel.RowStyles.Add(new RowStyle());
+            formPanel.Size = new Size(734, 561);
+            formPanel.TabIndex = 1;
+            // 
             // ChessBoardForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(484, 441);
-            Controls.Add(outerPanel);
+            ClientSize = new Size(734, 561);
+            Controls.Add(formPanel);
             Icon = (Icon)resources.GetObject("$this.Icon");
             MinimumSize = new Size(500, 480);
             Name = "ChessBoardForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Chess Game";
-            Load += Form1_Load;
+            Load += Form_Load;
+            formPanel.ResumeLayout(false);
+            formPanel.PerformLayout();
             ResumeLayout(false);
-            PerformLayout();
         }
 
         private void InitializeOtherComponents()
@@ -85,44 +105,34 @@ namespace ChessUI
         {
             this.ClientSize = new Size(FORM_WIDTH, FORM_HEIGHT);
             this.MinimumSize = new Size(500, 480);
-            this.Name = "ChessBoardForm";
             this.StartPosition = FormStartPosition.CenterScreen;
+
+            this.Name = "ChessBoardForm";
             this.Text = "Chess Game";
-            this.Load += Form1_Load;
-            /*this.MouseDown += new MouseEventHandler(outerPanel_MouseDown);
-            this.MouseUp += new MouseEventHandler(outerPanel_MouseUp);
-            this.MouseMove += new MouseEventHandler(outerPanel_MouseMove);*/
         }
 
 
         private void InitializeOuterPanel()
         {
-            outerPanel.AutoSize = true;
-            outerPanel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            outerPanel.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+            formPanel.Controls.Add(outerPanel, 1, 1);
+            // outerPanel.AutoSize = true;
+            // outerPanel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            outerPanel.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
 
             outerPanel.ColumnCount = 2;
             outerPanel.RowCount = 1;
 
-            outerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            outerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 50F));
             outerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
 
             outerPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
 
-            outerPanel.Location = new Point(0, 0);
+            outerPanel.Location = new Point(SQUARE_SIZE / 2, SQUARE_SIZE);
             outerPanel.Padding = new Padding(SQUARE_SIZE / 2, SQUARE_SIZE, 0, 0);
 
             outerPanel.Name = "outerPanel";
             outerPanel.Size = new Size(0, 0);
             outerPanel.TabIndex = 0;
-
-            AdjustTableLayoutPanelSize();
-        }
-
-
-        private void AdjustTableLayoutPanelSize()
-        {
-
         }
 
 
@@ -130,19 +140,21 @@ namespace ChessUI
         {
             boardGrid = new TableLayoutPanel
             {
+                Dock = DockStyle.Fill,
                 RowCount = BOARD_SIZE,
                 ColumnCount = BOARD_SIZE,
                 CellBorderStyle = TableLayoutPanelCellBorderStyle.Single,
                 Size = new Size(BOARD_SIZE * SQUARE_SIZE, BOARD_SIZE * SQUARE_SIZE),
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
             };
 
             for (int i = 0; i < BOARD_SIZE; i++)
-                boardGrid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+                boardGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, SQUARE_SIZE));
 
             for (int j = 0; j < BOARD_SIZE; j++)
-                boardGrid.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+                boardGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, SQUARE_SIZE));
 
             outerPanel.Controls.Add(boardGrid, 0, 0);
         }
@@ -163,6 +175,7 @@ namespace ChessUI
                         FlatAppearance = { BorderSize = 0 },
                         BackgroundImageLayout = ImageLayout.Zoom,
                         Tag = (col, row),
+                        Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
                     };
 
                     var pieceAttributes = GetPieceAttributes(col, row);
@@ -202,7 +215,8 @@ namespace ChessUI
                 RowCount = 2,
                 Dock = DockStyle.Fill,
                 Name = "gridForTimers",
-                TabIndex = 0
+                TabIndex = 0,
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
             };
 
             gridForTimers.RowStyles.Add(new RowStyle(SizeType.Absolute, BOARD_SIZE * SQUARE_SIZE - TIMER_LABEL_HEIGHT / 3));
@@ -221,7 +235,9 @@ namespace ChessUI
                     Text = (i % 2 == 0) ? "White: 00:00:00" : "Black: 00:00:00",
                     Font = new Font("Arial", 15),
                     Size = new Size(TIMER_LABEL_WIDTH, TIMER_LABEL_HEIGHT),
-                    Dock = DockStyle.Left | DockStyle.Top
+                    Dock = DockStyle.Left | DockStyle.Top,
+                    AutoSize = true,
+                    Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
                 };
 
                 gridForTimers.Controls.Add(timerLabel[i], Math.Abs(i - 1), 0);
@@ -258,6 +274,11 @@ namespace ChessUI
             timerLabel[turn].Text = timerText;
         }
 
+        
+        private void Form_Load(object sender, EventArgs e)
+        {
+            this.FormClosing += Form1_FormClosing;
+        }
 
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -297,5 +318,6 @@ namespace ChessUI
         private TableLayoutPanel boardGrid;
         private Label[] timerLabel = new Label[2];
         private Timer[] timer = new Timer[2];
+        private TableLayoutPanel formPanel;
     }
 }
