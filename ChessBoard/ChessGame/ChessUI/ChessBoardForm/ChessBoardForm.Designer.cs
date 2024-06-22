@@ -1,10 +1,8 @@
 ﻿using Timer = System.Windows.Forms.Timer;
 using ChessLogic;
 using WindowHelper;
-using System.Diagnostics;
-using System.CodeDom;
 
-namespace WinFormsApp1
+namespace ChessUI
 {
     partial class ChessBoardForm
     {
@@ -241,8 +239,6 @@ namespace WinFormsApp1
         }
 
         #endregion
-
-        private int centerX, centerY;
 
         private const int FORM_WIDTH = 750;
         private const int FORM_HEIGHT = 600;

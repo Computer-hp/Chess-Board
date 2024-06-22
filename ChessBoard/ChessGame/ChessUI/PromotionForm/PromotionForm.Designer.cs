@@ -1,7 +1,7 @@
 ﻿using ChessLogic;
 using WindowHelper;
 
-namespace WinFormsApp1
+namespace ChessUI
 {
     partial class PromotionForm
     {

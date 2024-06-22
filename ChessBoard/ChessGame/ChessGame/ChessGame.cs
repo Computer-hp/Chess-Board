@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using ChessLogic;
-using WinFormsApp1;
+using ChessUI;
 using Events;
 
 namespace ChessGame

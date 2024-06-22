@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using WindowHelper;
 
-namespace WinFormsApp1
+namespace ChessUI
 {
     public partial class MainMenu : Form
     {

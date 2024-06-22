@@ -1,4 +1,6 @@
-namespace WinFormsApp1
+using ChessUI;
+
+namespace ChessGame
 {
     internal static class Program
     {

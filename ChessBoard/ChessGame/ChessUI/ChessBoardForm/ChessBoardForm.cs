@@ -1,5 +1,3 @@
-using System.Windows.Forms;
-using Timer = System.Windows.Forms.Timer;
 using WindowHelper;
 using ChessLogic;
 using ChessGame;
@@ -15,7 +13,7 @@ using System.Diagnostics;
 //      this is because the CalculateMoves method calculates the moves until the position of the king.
 //      if there are squares after the king, it should not be able to move.
 
-namespace WinFormsApp1
+namespace ChessUI
 {
     public partial class ChessBoardForm : Form
     {
@@ -110,7 +108,7 @@ namespace WinFormsApp1
         private void DisplayPieceMovement((int x, int y) destSquare, Bitmap image)
         {
             Button destButton = GetButtonAtPosition(destSquare);
-            destButton!.BackgroundImage = image; //lastClickedButton!.BackgroundImage;
+            destButton.BackgroundImage = image; //lastClickedButton!.BackgroundImage;
 
             lastClickedButton!.BackgroundImage = null;
         }
@@ -148,14 +146,14 @@ namespace WinFormsApp1
             int rookX = (kingDest.x < BOARD_SIZE / 2) ? 0 : (BOARD_SIZE - 1);
             int rookY = kingDest.y;
 
-            Button? rookSquare = GetButtonAtPosition((rookX, rookY)); // rookDestination is not enough.
+            Button rookSquare = GetButtonAtPosition((rookX, rookY)); // rookDestination is not enough.
                                                                       // need to recognise wheather O_O or O_O_O
-            rookSquare!.BackgroundImage = null;
+            rookSquare.BackgroundImage = null;
 
             Bitmap rookImage = PieceImages.GetPieceImage(color, 'R');
 
             rookSquare = GetButtonAtPosition((rookDest.x, rookDest.y));
-            rookSquare!.BackgroundImage = rookImage;
+            rookSquare.BackgroundImage = rookImage;
         }
 
 
@@ -177,7 +175,7 @@ namespace WinFormsApp1
 
 
         // Find the button at the specified position
-        private Button? GetButtonAtPosition(ValueTuple<int, int> selectedSquare)
+        private Button GetButtonAtPosition(ValueTuple<int, int> selectedSquare)
         {
             var boardGrid = outerPanel.GetControlFromPosition(0, 0);
 

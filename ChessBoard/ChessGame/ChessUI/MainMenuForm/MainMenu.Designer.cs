@@ -1,6 +1,6 @@
-﻿namespace WinFormsApp1
+﻿namespace ChessUI
 {
-    partial class RestartForm
+    partial class MainMenu
     {
         /// <summary>
         /// Required designer variable.
@@ -26,80 +26,80 @@
         /// Required method for Designer support - do not modify
         /// the contents of this method with the code editor.
         /// </summary>
+
+        private int buttonWidth = 100;
+        private int buttonHeight = 60;
+
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainMenu));
             SuspendLayout();
             // 
-            // RestartForm
+            // MainMenu
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(10F, 19F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(202, 200);
-            ControlBox = false;
-            FormBorderStyle = FormBorderStyle.None;
-            MaximizeBox = false;
-            MinimizeBox = false;
-            Name = "RestartForm";
-            StartPosition = FormStartPosition.Manual;
+            ClientSize = new Size(384, 261);
+            Font = new Font("Arial", 12F, FontStyle.Bold, GraphicsUnit.Point);
+            ForeColor = Color.White;
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            Name = "MainMenu";
+            StartPosition = FormStartPosition.CenterScreen;
+            Text = "MainMenu";
             ResumeLayout(false);
         }
 
-        private void InitializeRetartMenu()
+        private void InitializeMainMenuButtons()
         {
-            int buttonWidth = 100;
-            int buttonHeight = 40;
             int formWidth = ClientSize.Width;
             int formHeight = ClientSize.Height;
 
-            string winnerMessage = (!String.IsNullOrEmpty(winner)) ? "Draw" : $"Winner is: { winner }";
-
-            Label label = new Label()
-            {
-                Text = winnerMessage,
-                Width = buttonWidth - 5,
-                Height = buttonHeight - 15,
-                BackColor = Color.Peru,
-                ForeColor = Color.White,
-                Font = new Font("Arial", 16, FontStyle.Bold),
-                TextAlign = ContentAlignment.MiddleCenter
-            };
-
-            label.Left = (this.ClientSize.Width - label.Width) / 2;
-            label.Top = (this.ClientSize.Height - label.Height) / 2 - 60; 
-
-
-            Button button1 = new Button()
+            Button buttonNewGame = new()
             {
                 Text = "New Game",
                 Width = buttonWidth,
                 Height = buttonHeight,
                 Left = (formWidth - buttonWidth) / 2,
-                Top = (formHeight - buttonHeight) / 2 - 15,
+                Top = (formHeight - buttonHeight) / 2 - 70,
 
                 BackColor = Color.Peru,
                 ForeColor = Color.White,
                 Font = new Font("Arial", 12, FontStyle.Bold)
             };
 
-            Button button2 = new Button
+            Button buttonExit = new()
             {
-                Text = "Main Menu",
+                Text = "Exit",
                 Width = buttonWidth,
                 Height = buttonHeight,
                 Left = (formWidth - buttonWidth) / 2,
-                Top = (formHeight - buttonHeight) / 2 + 30,
+                Top = (formHeight - buttonHeight) / 2 + 70,
 
                 BackColor = Color.Peru,
                 ForeColor = Color.White,
                 Font = new Font("Arial", 12, FontStyle.Bold)
             };
 
-            button1.Click += Button_Click;
-            button2.Click += Button_Click;
+            Button buttonConnect = new()
+            {
+                Text = "Connect",
+                Width = buttonWidth - 20,
+                Height = buttonHeight - 20,
+                Left = formWidth - 90,
+                Top = formHeight - 50,
 
-            Controls.Add(label);
-            Controls.Add(button1);
-            Controls.Add(button2);
+                BackColor = Color.Peru,
+                ForeColor = Color.White,
+                Font = new Font("Arial", 11, FontStyle.Bold)
+            };
+
+            buttonNewGame.Click += Create_ChessBoard;
+            buttonExit.Click += Button_Exit;
+            buttonExit.Click += Button_ConnectBluetooth;
+
+            Controls.Add(buttonNewGame);
+            Controls.Add(buttonExit);
+            Controls.Add(buttonConnect);
         }
 
         #endregion

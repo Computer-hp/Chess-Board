@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-
-// For the pin i was thinking about adding a new property (bool) to the
+﻿// For the pin i was thinking about adding a new property (bool) to the
 // class Piece. After a piece is moved i have to control wheather
 // the piece has pinned an opponents piece.
 
