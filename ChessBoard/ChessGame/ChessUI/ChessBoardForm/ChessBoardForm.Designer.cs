@@ -43,32 +43,33 @@ namespace ChessUI
             // 
             // outerPanel
             // 
-            outerPanel.ColumnCount = 1;
-            outerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 20F));
+            outerPanel.ColumnCount = 2;
+            outerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 76F));
+            outerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 24F));
             outerPanel.Dock = DockStyle.Fill;
-            outerPanel.Location = new Point(52, 41);
+            outerPanel.Location = new Point(51, 44);
             outerPanel.Margin = new Padding(0);
             outerPanel.Name = "outerPanel";
             outerPanel.RowCount = 1;
-            outerPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
-            outerPanel.Size = new Size(630, 480);
+            outerPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            outerPanel.Size = new Size(631, 476);
             outerPanel.TabIndex = 0;
             // 
             // formPanel
             // 
-            formPanel.Anchor = AnchorStyles.None;
             formPanel.ColumnCount = 3;
-            formPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 52F));
-            formPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 630F));
-            formPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 52F));
+            formPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 7F));
+            formPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 86F));
+            formPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 7F));
             formPanel.Controls.Add(outerPanel, 1, 1);
+            formPanel.Dock = DockStyle.Fill;
             formPanel.Location = new Point(0, 0);
             formPanel.Margin = new Padding(0);
             formPanel.Name = "formPanel";
             formPanel.RowCount = 3;
-            formPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 41F));
-            formPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 480F));
-            formPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
+            formPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 8F));
+            formPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 85F));
+            formPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 7F));
             formPanel.Size = new Size(734, 561);
             formPanel.TabIndex = 0;
             // 
@@ -93,18 +94,18 @@ namespace ChessUI
             InitializeForm();
             InitializeFormPanel();
             InitializeOuterPanel();
-            //InitializeBoardGrid();
-            //InitializeButtons();
-            //InitializeGridForTimers();
-            //InitializeTimerLabels();
-            //InitializeTimers();
+            InitializeBoardGrid();
+            InitializeButtons();
+            InitializeGridForTimers();
+            InitializeTimerLabels();
+            InitializeTimers();
         }
 
 
         private void InitializeForm()
         {
             this.ClientSize = new Size(FORM_WIDTH, FORM_HEIGHT);
-            this.MinimumSize = new Size(500, 480);
+            this.MinimumSize = new Size(650, 550);
             this.StartPosition = FormStartPosition.CenterScreen;
 
             this.Name = "ChessBoardForm";
@@ -115,26 +116,16 @@ namespace ChessUI
         private void InitializeFormPanel()
         {
             formPanel.Name = "formPanel";
-            //formPanel.Size = new Size(734, 561);
-            formPanel.Location = new Point(0, 0);
             formPanel.Padding = new Padding(0);
             formPanel.Margin = new Padding(0);
 
+            formPanel.AutoSize = false;
             formPanel.Anchor = AnchorStyles.None;
-            //formPanel.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top | AnchorStyles.Bottom;
             formPanel.Dock = DockStyle.Fill;
 
-            /*
-            formPanel.ColumnCount = 3;
-            formPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 52F));
-            formPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 630F));
-            formPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 52F));
+            formPanel.MaximumSize = new Size(this.ClientSize.Width, this.ClientSize.Height);
 
-            formPanel.RowCount = 3;
-            formPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 41F));
-            formPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 480F));
-            formPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
-            */
+            /********* If you want to modify by yourself columns and rows
 
             formPanel.ColumnCount = 3;
             formPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 7F));
@@ -142,72 +133,39 @@ namespace ChessUI
             formPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 7F));
 
             formPanel.RowCount = 3;
+            formPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 8F));
+            formPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 85F));
             formPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 7F));
-            formPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 86F));
-            formPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 7F));
 
-            formPanel.TabIndex = 0;
-            
-            /*
-            for (int row = 0; row < formPanel.RowCount; row++)
-                for (int col = 0; col < formPanel.ColumnCount; col++)
-                {
-                    Control control = formPanel.GetControlFromPosition(col, row);
-
-                    if (control == null) continue;
-
-                    if ((row + col) % 2 == 0) control.BackColor = Color.Red; // Color for even sum (like white squares)
-
-                    else control.BackColor = Color.Blue; // Color for odd sum (like black squares)
-                }
-            */
+            **********/
         }
 
 
         private void InitializeOuterPanel()
         {
-            outerPanel.Size = new Size(BOARD_SIZE * SQUARE_SIZE + TIMER_LABEL_WIDTH, BOARD_SIZE * SQUARE_SIZE);
             outerPanel.Name = "outerPanel";
-            //outerPanel.Location = new Point(52, 41);
             outerPanel.Padding = new Padding(0);
             outerPanel.Margin = new Padding(0);
 
+            outerPanel.AutoSize = false;
             outerPanel.Anchor = AnchorStyles.None;
             outerPanel.Dock = DockStyle.Fill;
 
-            /*
+            formPanel.Controls.Add(outerPanel, 1, 1);
+
+            /********* If you want to modify by yourself columuns and rows
+
+            outerPanel.ColumnStyles.Clear();
+            outerPanel.RowStyles.Clear();
+            
             outerPanel.ColumnCount = 2;
-            outerPanel.RowCount = 1;
-
-            outerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, BOARD_SIZE * SQUARE_SIZE));
-            outerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, TIMER_LABEL_WIDTH));
-
-            outerPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, BOARD_SIZE * SQUARE_SIZE));
-            */
-
-            outerPanel.ColumnCount = 2;
-            outerPanel.RowCount = 1;
-
             outerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 76F));
             outerPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 24F));
-
+            
+            outerPanel.RowCount = 1;
             outerPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
-            for (int row = 0; row < outerPanel.RowCount; row++)
-                for (int col = 0; col < outerPanel.ColumnCount; col++)
-                {
-                    Control control = outerPanel.GetControlFromPosition(col, row);
-
-                    if (control == null) continue;
-
-                    if ((row + col) % 2 == 0) control.BackColor = Color.Red; // Color for even sum (like white squares)
-
-                    else control.BackColor = Color.Blue; // Color for odd sum (like black squares)
-                }
-
-
-            outerPanel.TabIndex = 0;
-            formPanel.Controls.Add(outerPanel, 1, 1);
+            **********/
         }
 
 
@@ -215,24 +173,26 @@ namespace ChessUI
         {
             boardGrid = new TableLayoutPanel
             {
-                //Location = new Point(52, 41),
                 Margin = new Padding(0),
                 Padding = new Padding(0),
                 RowCount = BOARD_SIZE,
                 ColumnCount = BOARD_SIZE,
                 CellBorderStyle = TableLayoutPanelCellBorderStyle.Single,
                 Size = new Size(BOARD_SIZE * SQUARE_SIZE, BOARD_SIZE * SQUARE_SIZE),
+                AutoSize = false,
                 Anchor = AnchorStyles.None,
                 Dock = DockStyle.Fill,
                 BackColor = Color.Black,
             };
-                        
+
+            boardGrid.RowStyles.Clear();
+            boardGrid.ColumnStyles.Clear();
 
             for (int i = 0; i < BOARD_SIZE; i++)
-                boardGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, SQUARE_SIZE));
+                boardGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 12.5F));
 
             for (int j = 0; j < BOARD_SIZE; j++)
-                boardGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, SQUARE_SIZE));
+                boardGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 12.5F));
 
             outerPanel.Controls.Add(boardGrid, 0, 0);
         }
@@ -253,6 +213,7 @@ namespace ChessUI
                         FlatAppearance = { BorderSize = 0 },
                         BackgroundImageLayout = ImageLayout.Zoom,
                         Tag = (col, row),
+                        AutoSize = false,
                         Anchor = AnchorStyles.None,
                         Dock = DockStyle.Fill,
                     };
@@ -290,42 +251,43 @@ namespace ChessUI
             {
                 Padding = new Padding(0),
                 Margin = new Padding(0),
-                ColumnCount = 1,
-                RowCount = 2,
                 Name = "gridForTimers",
-                TabIndex = 0,
+                AutoSize = false,
                 Anchor = AnchorStyles.None,
                 Dock = DockStyle.Fill,
             };
 
-            gridForTimers.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, TIMER_LABEL_WIDTH));
+            gridForTimers.ColumnCount = 1;
+            gridForTimers.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
 
-            gridForTimers.RowStyles.Add(new RowStyle(SizeType.Absolute, TIMER_LABEL_HEIGHT));
-            gridForTimers.RowStyles.Add(new RowStyle(SizeType.Absolute, BOARD_SIZE * SQUARE_SIZE - TIMER_LABEL_HEIGHT * 2));
-            gridForTimers.RowStyles.Add(new RowStyle(SizeType.Absolute, TIMER_LABEL_HEIGHT));
+            gridForTimers.RowCount = 3;
+            gridForTimers.RowStyles.Add(new RowStyle(SizeType.Percent, 10.4F));
+            gridForTimers.RowStyles.Add(new RowStyle(SizeType.Percent, 79.2F));
+            gridForTimers.RowStyles.Add(new RowStyle(SizeType.Percent, 10.4F));
 
-            outerPanel.Controls.Add(gridForTimers, 0, 1);
+            outerPanel.Controls.Add(gridForTimers, 1, 0);
         }
 
 
         private void InitializeTimerLabels()
         {
-            for (int i = 0, j = 0; i < N_PLAYERS; i++, j += 2)
+            for (int i = 0, j = 2; i < N_PLAYERS; i++, j -= 2)
             {
                 timerLabel[i] = new Label
                 {
-                    Text = (i % 2 == 0) ? "White: 00:00:00" : "Black: 00:00:00",
+                    Text = (i % 2 == 0) ? "White: 00:00:0" : "Black: 00:00:0",
+                    BackColor = Color.ForestGreen,
                     Font = new Font("Arial", 15),
+                    TextAlign = ContentAlignment.MiddleCenter,
                     Size = new Size(TIMER_LABEL_WIDTH, TIMER_LABEL_HEIGHT),
-                    //AutoSize = true,
-                    //Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
-                    //Anchor = AnchorStyles.None
-
-                    Anchor = AnchorStyles.None,//Top | AnchorStyles.Left,
+                    Padding = new Padding(0),
+                    Margin = new Padding(10, 0, 0, 0),
+                    AutoSize = true,
+                    Anchor = AnchorStyles.None,
                     Dock = DockStyle.Fill,
                 };
 
-                gridForTimers.Controls.Add(timerLabel[i], j, 0);
+                gridForTimers.Controls.Add(timerLabel[i], 0, j);
             }
         }
 
@@ -351,7 +313,7 @@ namespace ChessUI
 
             string player = (turn == 0) ? "White: " : "Black: ";
 
-            string milliseconds = (time.Milliseconds / 10).ToString("D2");
+            string milliseconds = (time.Milliseconds / 100).ToString("D1");
 
             string timerText = string.Format(player + "{0:D2}:{1:D2}:{2}",
                                                 time.Minutes, time.Seconds, milliseconds);
