@@ -32,13 +32,12 @@ namespace ChessGame
         private Dictionary<(int x, int y), List<(int validX, int validY)>> piecesAbleToStopCheck = new();
 
         public const int SQUARE_SIZE = 70;
-        public bool IsFirstMovePlayed { get; set; } = false;
 
         public bool IsLastClickedButtonNull = true;
         public bool HasLastClickedButtonChangedColor = true;
 
         public event EventHandler<CastleEventArgs>?           Castle;
-        public event EventHandler<GameFinishEventArgs>?        GameFinish;
+        public event EventHandler<GameFinishEventArgs>?       GameFinish;
         public event EventHandler<UIPieceMovementEventArgs>?  UIPieceMovement;
         public event EventHandler<UIClockTickEventArgs>?      UIClockTick;
 
@@ -104,7 +103,9 @@ namespace ChessGame
 
             ManageSituationAfterPieceMovement(destinationSquare);
 
-            if (!isCheck && IsDraw()) OnGameFinish(new GameFinishEventArgs("Draw"));
+            int oppositeClock = (turn + 1) % 2;
+
+            if (!isCheck && IsDraw()) OnGameFinish(new GameFinishEventArgs(oppositeClock, "Draw"));
            
 
         // #####
@@ -218,26 +219,23 @@ namespace ChessGame
         {
             var lastMovedPiece = chessBoard[destinationSquare.y, destinationSquare.x];
 
-            if (lastMovedPiece.Name == 'K')
-                return;
-
-            // Piece? king = FindKing(); // maybe it's better to keep track of white & black king by creating 2 obj.
+            if (lastMovedPiece.Name == 'K') return;
 
             int oppositeKingIdx = (turn + 1) % 2;
-
             Piece opponentKing = chessBoard[whiteAndBlackKingPos[oppositeKingIdx]];
-
 
             if (!HasPieceGivenCheck((opponentKing.X, opponentKing.Y), destinationSquare)) return;
 
-            if (lastMovedPiece.Name == 'P')
-                validMoves.RemoveAll(square => square.y == lastMovedPiece.Y + chessBoard.MovePawnTowardsBlackOrWhite);
+            // keeps only position of the piece, removes all other moves
+            if (lastMovedPiece.Name == 'P' || lastMovedPiece.Name == 'N')
+                validMoves.RemoveAll(square => square.x != lastMovedPiece.X && square.y != lastMovedPiece.Y);
 
             ManageSituationAfterCheck(opponentKing);
 
-            if (!IsCheckmate()) return; // should also add Draw 
+            if (!IsCheckmate()) return;
 
-            OnGameFinish(new GameFinishEventArgs(currentPlayer[turn].ToString()));
+            int oppositeClock = (turn + 1) % 2;
+            OnGameFinish(new GameFinishEventArgs(oppositeClock, currentPlayer[turn].ToString()));
         }
 
 
@@ -251,15 +249,13 @@ namespace ChessGame
                 if (piece == null || piece.Color == currentPlayer[turn]) continue;
 
                 validMoves = chessBoard.CalculateMoves(piece);
-                RemoveMovesThatTargetPiecesOfSameColor(validMoves, currentPlayer[oppositeColor]);
+                RemoveMovesThatTargetPiecesOfSameColor(ref validMoves, currentPlayer[oppositeColor]);
 
                 if (piece.Name == 'K')
                 {
                     RemoveKingSquaresCoveredByPieces(piece);
                     CheckPiecesNearKing(piece);
                 }
-
-                // have to remove moves that protect same color pieces, remove pawn moves, king moves, ...
 
                 if (validMoves.Count > 0) return false;
             }
@@ -325,10 +321,7 @@ namespace ChessGame
 
         private bool IsCheckmate()
         {
-            bool noValidMoves = !validMoves.Any();
-            bool noBlockingPieces = !piecesAbleToStopCheck.Any(); // maybe incorrect
-
-            return noValidMoves && noBlockingPieces;
+            return !validMoves.Any() && piecesAbleToStopCheck.Count == 0; // maybe incorrect
         }
 
 
@@ -474,7 +467,7 @@ namespace ChessGame
 
         private void CheckPiecesNearKing(Piece king)
         {
-            RemoveMovesThatTargetPiecesOfSameColor(validMoves, king.Color);
+            RemoveMovesThatTargetPiecesOfSameColor(ref validMoves, king.Color);
 
             foreach (var square in validMoves)
                 if (!chessBoard.IsSquareNull(square))
@@ -525,8 +518,7 @@ namespace ChessGame
                 if (IsSquareInList(copyMoves, square))
                     tmpMoves.Add(square);
 
-            if (!tmpMoves.Any())
-                return;
+            if (!tmpMoves.Any()) return;
 
             ValueTuple<int, int> key = (piece.X, piece.Y);
             piecesAbleToStopCheck[key] = tmpMoves;
@@ -646,7 +638,7 @@ namespace ChessGame
         }
 
 
-        private void RemoveMovesThatTargetPiecesOfSameColor(List<(int x, int y)> moves, PieceColor color)
+        private void RemoveMovesThatTargetPiecesOfSameColor(ref List<(int x, int y)> moves, PieceColor color)
         {
             moves = moves.Where(move => chessBoard.IsSquareNull(move) || chessBoard[move].Color != color).ToList();
         }

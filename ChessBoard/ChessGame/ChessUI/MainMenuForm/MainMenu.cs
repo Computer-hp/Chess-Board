@@ -6,13 +6,13 @@ namespace ChessUI
     public partial class MainMenu : Form
     {
         private ChessBoardForm chessBoardForm;
-        private Task mainFormTask;
         private CancellationTokenSource? cts;
 
 
         public MainMenu()
         {
             InitializeComponent();
+            InitializeMainMenuForm();
             InitializeMainMenuButtons();
             DarkThemeWindowHelper.ApplyDarkTheme(this);
         }
@@ -33,7 +33,7 @@ namespace ChessUI
             }));
 
             cts = new CancellationTokenSource();
-            mainFormTask = Task.Run(() => HandleChessBoard(cts.Token), cts.Token);
+            Task mainFormTask = Task.Run(() => HandleChessBoard(cts.Token), cts.Token);
         }
 
 
@@ -68,13 +68,6 @@ namespace ChessUI
                 Debug.Write("\nObjectDisposedException occured\n");
             }
         }
-
-
-        /*private void ChessBoardForm_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            if (chessBoardForm.IsClosed)
-                this.Invoke(new Action(this.Show));
-        }*/
 
 
         private void Button_ConnectBluetooth(object sender, EventArgs e)

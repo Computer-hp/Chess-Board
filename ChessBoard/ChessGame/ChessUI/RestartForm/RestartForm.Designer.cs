@@ -44,12 +44,21 @@
             ResumeLayout(false);
         }
 
-        private void InitializeRetartMenu()
+
+        private void InitializeRestartMenuForm()
+        {
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.MinimumSize = new Size(FORM_WIDTH, FORM_HEIGHT);
+            this.MaximumSize = new Size(FORM_WIDTH, FORM_HEIGHT);
+            this.Size = new Size(FORM_WIDTH, FORM_HEIGHT);
+        }
+
+
+        private void InitializeRetartMenuComponents()
         {
             int buttonWidth = 100;
             int buttonHeight = 40;
-            int formWidth = ClientSize.Width;
-            int formHeight = ClientSize.Height;
 
             string winnerMessage = (!String.IsNullOrEmpty(winner)) ? "Draw" : $"Winner is: { winner }";
 
@@ -64,8 +73,8 @@
                 TextAlign = ContentAlignment.MiddleCenter
             };
 
-            label.Left = (this.ClientSize.Width - label.Width) / 2;
-            label.Top = (this.ClientSize.Height - label.Height) / 2 - 60; 
+            label.Left = (FORM_WIDTH - label.Width) / 2;
+            label.Top = (FORM_HEIGHT - label.Height) / 2 - 60; 
 
 
             Button button1 = new Button()
@@ -73,8 +82,8 @@
                 Text = "New Game",
                 Width = buttonWidth,
                 Height = buttonHeight,
-                Left = (formWidth - buttonWidth) / 2,
-                Top = (formHeight - buttonHeight) / 2 - 15,
+                Left = (FORM_WIDTH - buttonWidth) / 2,
+                Top = (FORM_HEIGHT - buttonHeight) / 2 - 15,
 
                 BackColor = Color.Peru,
                 ForeColor = Color.White,
@@ -86,8 +95,8 @@
                 Text = "Main Menu",
                 Width = buttonWidth,
                 Height = buttonHeight,
-                Left = (formWidth - buttonWidth) / 2,
-                Top = (formHeight - buttonHeight) / 2 + 30,
+                Left = (FORM_WIDTH - buttonWidth) / 2,
+                Top = (FORM_HEIGHT - buttonHeight) / 2 + 30,
 
                 BackColor = Color.Peru,
                 ForeColor = Color.White,
@@ -103,5 +112,9 @@
         }
 
         #endregion
+
+
+        private const int FORM_WIDTH  = 210;
+        private const int FORM_HEIGHT = 200;
     }
 }

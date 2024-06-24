@@ -221,7 +221,7 @@ namespace ChessLogic
         }
 
 
-        private List<(int x, int y)> CalculateKnightMoves(Piece piece)
+        private static List<(int x, int y)> CalculateKnightMoves(Piece piece)
         {
             List<(int x, int y)> validMoves = new();
 

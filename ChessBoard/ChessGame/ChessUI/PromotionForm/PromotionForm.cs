@@ -15,6 +15,7 @@ namespace ChessUI
         public PromotionForm(int turn)
         {
             InitializeComponent();
+            InitializePromotionForm();
 
             PieceColor color = (turn == 0) ? PieceColor.White : PieceColor.Black;
 
@@ -22,7 +23,7 @@ namespace ChessUI
 
             foreach (var buttonName in promotionPiecesName)
             {
-                InitializePromotionForm(color, buttonName, counter);
+                InitializePromotionFormComponents(color, buttonName, counter);
                 counter += BUTTON_HEIGHT;
             }
         }

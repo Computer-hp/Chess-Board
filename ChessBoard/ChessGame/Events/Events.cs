@@ -5,11 +5,13 @@ namespace Events
 {
     public class GameFinishEventArgs : EventArgs
     {
+        public readonly int LastTickingTimerIdx;
         public readonly string Winner;
 
 
-        public GameFinishEventArgs(string winner)
+        public GameFinishEventArgs(int lastTickingTimerIdx, string winner)
         {
+            LastTickingTimerIdx = lastTickingTimerIdx;
             Winner = winner;
         }
     }
@@ -48,7 +50,6 @@ namespace Events
     public class UIClockTickEventArgs : EventArgs
     {
         public readonly int BlackOrWhiteClock;
-
 
         public UIClockTickEventArgs(int blackOrWhiteClock)
         {

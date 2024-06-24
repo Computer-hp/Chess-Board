@@ -50,24 +50,31 @@ namespace ChessUI
         }
 
 
-
-        private void InitializePromotionForm(PieceColor color, char notation, int counter)
+        private void InitializePromotionForm()
         {
-            int formWidth = this.ClientSize.Width;
-            int formHeight = this.ClientSize.Height;
+            // this.StartPosition = FormStartPosition.CenterScreen; --> make the form spawn under or above the cell.
+            this.MinimumSize = new Size(FORM_WIDTH, FORM_HEIGHT);
+            this.MaximumSize = new Size(FORM_WIDTH, FORM_HEIGHT);
+            this.Size = new Size(FORM_WIDTH, FORM_HEIGHT);
+        }
 
+
+        private void InitializePromotionFormComponents(PieceColor color, char notation, int counter)
+        {
             Bitmap resizedImage = PieceImages.GetPieceImage(color, notation);
 
             Button button = new()
             {
                 Width = BUTTON_WIDTH,
                 Height = BUTTON_HEIGHT,
-                Left = (formWidth - BUTTON_WIDTH) / 2,
+                Left = (FORM_WIDTH - BUTTON_WIDTH) / 2,
                 Top = counter,
                 Name = notation.ToString(),
                 BackColor = Color.Ivory,
+                Padding = new Padding(0),
+                Margin = new Padding(0),
                 FlatStyle = FlatStyle.Flat,
-                FlatAppearance = { BorderSize = 1 },
+                FlatAppearance = { BorderSize = 0 },
                 BackgroundImage = resizedImage,
                 BackgroundImageLayout = ImageLayout.Zoom
             };
@@ -77,5 +84,8 @@ namespace ChessUI
         }
 
         #endregion
+        
+        private const int FORM_WIDTH  = 68;
+        private const int FORM_HEIGHT = 260;
     }
 }

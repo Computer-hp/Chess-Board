@@ -1,4 +1,6 @@
-﻿namespace ChessUI
+﻿using System.CodeDom;
+
+namespace ChessUI
 {
     partial class MainMenu
     {
@@ -48,6 +50,18 @@
             Text = "MainMenu";
             ResumeLayout(false);
         }
+
+
+        private void InitializeMainMenuForm()
+        {
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.MinimumSize = new Size(FORM_WIDTH, FORM_HEIGHT);
+            this.MaximumSize = new Size(FORM_WIDTH, FORM_HEIGHT);
+            this.Size = new Size(FORM_WIDTH, FORM_HEIGHT);
+        }
+
 
         private void InitializeMainMenuButtons()
         {
@@ -103,5 +117,8 @@
         }
 
         #endregion
+
+        private const int FORM_WIDTH  = 400;
+        private const int FORM_HEIGHT = 300;
     }
 }

@@ -119,7 +119,6 @@ namespace ChessUI
 
         private void ManageClockTick(int blackOrWhiteClock)
         {
-            Debug.Write($"blackOrWhiteClock = {blackOrWhiteClock}");
             timer[blackOrWhiteClock].Stop();
 
             int oppositeClock = Math.Abs(blackOrWhiteClock - 1);
@@ -156,18 +155,23 @@ namespace ChessUI
 
         private void Game_Finish(object sender, GameFinishEventArgs e)
         {
+            timerLabel[e.LastTickingTimerIdx].BeginInvoke((MethodInvoker)delegate
+            {
+                timer[e.LastTickingTimerIdx].Stop();
+            });
+
             ShowRestartForm(e.Winner);
         }
 
 
         private void ShowRestartForm(string winner)
         {
-            var popUp = new RestartForm(winner) { StartPosition = FormStartPosition.CenterParent };
-            popUp.ShowDialog(this);
+            var restartForm = new RestartForm(winner) { StartPosition = FormStartPosition.CenterParent };
+            restartForm.ShowDialog(this);
 
-            if (RestartForm.NewGame) IsRestarted = true;
+            if (restartForm.NewGame) IsRestarted = true;
 
-            else if (RestartForm.MainMenu) this.Close();
+            else if (restartForm.MainMenu) this.Close();
         }
 
 

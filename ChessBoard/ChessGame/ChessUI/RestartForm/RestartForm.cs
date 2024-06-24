@@ -6,14 +6,15 @@ namespace ChessUI
     public partial class RestartForm : Form
     {
         private string winner;
-        public static bool NewGame { get; set; }  = false;
-        public static bool MainMenu { get; set; } = false;
+        public bool NewGame { get; private set; }  = false;
+        public bool MainMenu { get; private set; } = false;
 
         public RestartForm(string winner)
         {
             this.winner = winner;
             InitializeComponent();
-            InitializeRetartMenu();
+            InitializeRestartMenuForm();
+            InitializeRetartMenuComponents();
             DarkThemeWindowHelper.ApplyDarkTheme(this);
         }
 
