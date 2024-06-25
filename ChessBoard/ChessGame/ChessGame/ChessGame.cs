@@ -154,7 +154,7 @@ namespace ChessGame
             if (!O_O_O[turn])  
                 O_O_O[turn] = IsCastleLegal((int)Files.bFile, (int)Files.eFile, isRook_A_FirstMove[turn]);
 
-            if (!O_O[turn])  
+            if (!O_O[turn])
                 O_O[turn] = IsCastleLegal((int)Files.fFile, (int)Files.hFile, isRook_H_FirstMove[turn]);
 
             Debug.WriteLine("king moves:");
@@ -217,7 +217,7 @@ namespace ChessGame
 
         private void ManageSituationAfterPieceMovement((int x, int y) destinationSquare)
         {
-            var lastMovedPiece = chessBoard[destinationSquare.y, destinationSquare.x];
+            var lastMovedPiece = chessBoard[destinationSquare];
 
             if (lastMovedPiece.Name == 'K') return;
 
@@ -229,6 +229,11 @@ namespace ChessGame
             // keeps only position of the piece, removes all other moves
             if (lastMovedPiece.Name == 'P' || lastMovedPiece.Name == 'N')
                 validMoves.RemoveAll(square => square.x != lastMovedPiece.X && square.y != lastMovedPiece.Y);
+
+            else // to remove king move that goes in the same line where check is given
+            {
+                // if     
+            }
 
             ManageSituationAfterCheck(opponentKing);
 
@@ -428,7 +433,6 @@ namespace ChessGame
         }
 
 
-
         private void RemoveKingSquaresCoveredByPieces(Piece king)
         {
             List<(int x, int y)> tmpKingMoves = new();
@@ -437,7 +441,7 @@ namespace ChessGame
             foreach (var piece in chessBoard)
             {
                 if (piece == null || 
-                    piece.Color == king.Color /*|| piece.Name == king.Name*/)  // commented this so when moving king to opponent king they can't move closer then one square.
+                    piece.Color == king.Color)
                     continue;
 
 
@@ -455,13 +459,11 @@ namespace ChessGame
             
             validMoves.Clear();  // if this is removed than ValidMoves will contain the moves of the piece that protects the one that gave check
             validMoves.AddRange(tmpKingMoves);
-
-            //CheckPiecesNearKing(king);
         }
 
 
         /*
-            Checks each square next to the king, 9 squares in total,
+            Checks each square next to the king, 8 squares in total,
             and removes squares where king is not able to move.
         */
 
@@ -576,10 +578,13 @@ namespace ChessGame
         
         private void ManageInvalidDiagonalPawnMoves(Piece pawn)
         {
-            int movePawnTowardBlackOrWhite = (pawn.Color == PieceColor.White) ? -1 : 1;
+            //int movePawnTowardBlackOrWhite = (pawn.Color == PieceColor.White) ? -1 : 1;
 
-            RemoveInvalidDiagonalPawnMoves((pawn.X + 1, pawn.Y + movePawnTowardBlackOrWhite));
-            RemoveInvalidDiagonalPawnMoves((pawn.X - 1, pawn.Y + movePawnTowardBlackOrWhite));
+            //RemoveInvalidDiagonalPawnMoves((pawn.X + 1, pawn.Y + movePawnTowardBlackOrWhite));
+            //RemoveInvalidDiagonalPawnMoves((pawn.X - 1, pawn.Y + movePawnTowardBlackOrWhite));
+
+            validMoves.RemoveAll(square => square.x != pawn.X && 
+                                 (chessBoard.IsSquareNull(square) || chessBoard[square].Name == 'K'));
         }
 
 
