@@ -1,2 +1,0 @@
-ChessBoard.cs --> use ValueTuple or (int, int) instead of struct Square for list.
-Maybe, create a method that ads the tuple to a list
