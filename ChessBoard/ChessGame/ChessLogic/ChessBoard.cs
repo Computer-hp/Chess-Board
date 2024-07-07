@@ -97,10 +97,10 @@ namespace ChessLogic
 
         public void InitializePieces()
         {
-            int firstRank = (int)Ranks.FirstRank;
-            int secondRank = (int)Ranks.SecondRank;
-            int seventhRank = (int)Ranks.SeventhRank;
-            int eightRank = (int)Ranks.EighthRank;
+            int firstRank = (int)Ranks.First;
+            int secondRank = (int)Ranks.Second;
+            int seventhRank = (int)Ranks.Seventh;
+            int eightRank = (int)Ranks.Eighth;
 
             for (int x = 0; x < BOARD_SIZE; x++)
             {
@@ -168,8 +168,8 @@ namespace ChessLogic
 
         private static bool IsPawnBeingMovedForTheFirstTime(Piece piece)
         {
-            return ((piece.Color == PieceColor.White && piece.Y == (int)Ranks.SecondRank) ||
-                    (piece.Color == PieceColor.Black && piece.Y == (int)Ranks.SeventhRank));
+            return ((piece.Color == PieceColor.White && piece.Y == (int)Ranks.Second) ||
+                    (piece.Color == PieceColor.Black && piece.Y == (int)Ranks.Seventh));
         }
 
 

@@ -9,27 +9,20 @@
 
     public enum Ranks
     {
-        EighthRank,
-        SeventhRank,
-        SixthRank,
-        FifthRank,
-        FourthRank,
-        ThirdRank,
-        SecondRank,
-        FirstRank
+        Eighth,
+        Seventh,
+        Sixth,
+        Fifth,
+        Fourth,
+        Third,
+        Second,
+        First
     };
 
 
     public enum Files
     {
-        aFile,
-        bFile,
-        cFile,
-        dFile,
-        eFile,
-        fFile,
-        gFile,
-        hFile
+        a, b, c, d, e, f, g, h
     };
 
 

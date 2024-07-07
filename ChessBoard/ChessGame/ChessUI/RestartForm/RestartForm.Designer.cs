@@ -65,8 +65,8 @@
             Label label = new Label()
             {
                 Text = winnerMessage,
-                Width = buttonWidth - 5,
-                Height = buttonHeight - 15,
+                Width = buttonWidth - 4,
+                Height = buttonHeight - 14,
                 BackColor = Color.Peru,
                 ForeColor = Color.White,
                 Font = new Font("Arial", 16, FontStyle.Bold),
@@ -114,7 +114,7 @@
         #endregion
 
 
-        private const int FORM_WIDTH  = 210;
+        private const int FORM_WIDTH  = 220;
         private const int FORM_HEIGHT = 200;
     }
 }
