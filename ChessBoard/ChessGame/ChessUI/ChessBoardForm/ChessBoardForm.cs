@@ -14,6 +14,7 @@ using System.DirectoryServices;
 //      this is because the CalculateMoves method calculates the moves until the position of the king.
 //      if there are squares after the king, it should not be able to move.
 
+
 namespace ChessUI
 {
     public partial class ChessBoardForm : Form
@@ -37,6 +38,7 @@ namespace ChessUI
         {
             game = new Game();
             InitializeEvents();
+            InitializeDelegates();
             InitializeComponent();
             InitializeOtherComponents();
             DarkThemeWindowHelper.ApplyDarkTheme(this);
@@ -45,13 +47,16 @@ namespace ChessUI
 
         private void InitializeEvents()
         {
-            game.Castle += Game_Castle!;
-            game.GameFinish += Game_Finish!;
+            game.Castle          += Game_Castle!;
+            game.GameFinish      += Game_Finish!;
             game.UIPieceMovement += UI_Piece_Movement!;
-            game.UIClockTick += UI_Clock_Tick!;
+            game.UIClockTick     += UI_Clock_Tick!;
         }
 
-
+        private void InitializeDelegates()
+        {
+            game.Promotion += ManagePromotion;
+        }
 
 
         private void Button_Click(object sender, EventArgs e)
@@ -101,7 +106,6 @@ namespace ChessUI
             DisplayPieceMovement(e.DestButtonTag, e.ButtonImage);
         }
 
-
         private void DisplayPieceMovement((int x, int y) destSquare, Bitmap image)
         {
             Button destButton = GetButtonAtPosition(destSquare);
@@ -111,11 +115,24 @@ namespace ChessUI
         }
 
 
+        private char ManagePromotion(int turn, (int x, int y) buttonTag)
+        {
+            Button button = GetButtonAtPosition(buttonTag);
+            Point buttonPos = button.Location;
+            Point buttonScreenPos = button.PointToScreen(buttonPos);
+
+            var promotionForm = new PromotionForm(turn, buttonScreenPos);
+            promotionForm.ShowDialog();
+            Debug.Write($"\n**** promotionForm.Location = '{promotionForm.Location.X}, {promotionForm.Location.Y}' ****\n");
+            Debug.Write($"\n**** original.Location = '{buttonScreenPos.X}, {buttonScreenPos.Y}' ****\n");
+            return promotionForm.PromotedPieceName;
+        }
+
+
         private void UI_Clock_Tick(object sender, UIClockTickEventArgs e)
         {
             ManageClockTick(e.BlackOrWhiteClock);
         }
-
 
         private void ManageClockTick(int blackOrWhiteClock)
         {
@@ -135,7 +152,6 @@ namespace ChessUI
         {
             DisplayCastle(e.KingDestination, e.RookDestination, e.Color);
         }
-
 
         private void DisplayCastle((int x, int y) kingDest, (int x, int y) rookDest, PieceColor color)
         {
@@ -175,12 +191,9 @@ namespace ChessUI
         }
 
 
-        // Find the button at the specified position
         private Button GetButtonAtPosition(ValueTuple<int, int> selectedSquare)
         {
-            var boardGrid = outerPanel.GetControlFromPosition(0, 0);
-
-            foreach (var button in boardGrid.Controls.OfType<Button>())
+            foreach (var button in this.boardGrid.Controls.OfType<Button>())
                 if (selectedSquare == (ValueTuple<int, int>)button.Tag)
                     return button;
 

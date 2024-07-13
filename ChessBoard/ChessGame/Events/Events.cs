@@ -56,4 +56,6 @@ namespace Events
             BlackOrWhiteClock = blackOrWhiteClock;
         }
     }
+
+    public delegate char ManageUIPromotion(int turn, (int x, int y) buttonPosition);
 }

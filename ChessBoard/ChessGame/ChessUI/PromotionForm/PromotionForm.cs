@@ -4,28 +4,26 @@ namespace ChessUI
 {
     public partial class PromotionForm : Form
     {
+        private const int NUMBER_OF_PROMOTABLE_PIECES = 4;
+        private const int BUTTON_SIZE = ChessBoardForm.SQUARE_SIZE;
+
+        private static readonly char[] promotionPiecesName = { 'Q', 'R', 'B', 'N' };
+
         public char PromotedPieceName { get; set; }
 
-        private const int BUTTON_WIDTH = ChessBoardForm.SQUARE_SIZE;
-        private const int BUTTON_HEIGHT = ChessBoardForm.SQUARE_SIZE;
 
-        private static readonly char[] promotionPiecesName = { 'Q', 'R', 'B', 'N' };  // better to use a char[]
-
-
-        public PromotionForm(int turn)
+        public PromotionForm(int turn, Point buttonScreenPos)
         {
             InitializeComponent();
-            InitializePromotionForm();
 
+            if (turn == 0) buttonScreenPos.Y -= FORM_HEIGHT + 2; // (0, 0) point of the 'screen' is in the top left corner.
+
+            InitializePromotionForm(buttonScreenPos);
+            InitializeGrid();
             PieceColor color = (turn == 0) ? PieceColor.White : PieceColor.Black;
 
-            int counter = 0;
-
-            foreach (var buttonName in promotionPiecesName)
-            {
-                InitializePromotionFormComponents(color, buttonName, counter);
-                counter += BUTTON_HEIGHT;
-            }
+            for (int j = 0; j < NUMBER_OF_PROMOTABLE_PIECES; ++j)
+                InitializePromotionFormButtons(color, promotionPiecesName[j], 0, j);
         }
 
 

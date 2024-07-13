@@ -27,7 +27,7 @@ namespace ChessGame
         private Piece? selectedPiece = null;
         private (int x, int y)[] whiteAndBlackKingPos = new (int x, int y)[2];
 
-        private List<(int x, int y)> validMoves = new();
+        private List<(int x, int y)> validMoves     = new();
         private List<(int x, int y)> validKingMoves = new();
         private Dictionary<(int x, int y), List<(int validX, int validY)>> piecesAbleToStopCheck = new();
 
@@ -40,6 +40,8 @@ namespace ChessGame
         public event EventHandler<GameFinishEventArgs>?       GameFinish;
         public event EventHandler<UIPieceMovementEventArgs>?  UIPieceMovement;
         public event EventHandler<UIClockTickEventArgs>?      UIClockTick;
+        
+        public event ManageUIPromotion? Promotion;
 
 
         public Game()
@@ -72,9 +74,8 @@ namespace ChessGame
                 Debug.WriteLine(ChessBoard.PrintMoves(validMoves) + "\n");
 
                 if (selectedPiece.Name == 'P') 
-                { 
                     ManageInvalidDiagonalPawnMoves(selectedPiece); 
-                }
+
                 else if (selectedPiece.Name == 'K')
                 {
                     RemoveKingSquaresCoveredByPieces(selectedPiece);
@@ -106,18 +107,27 @@ namespace ChessGame
 
             (int x, int y) originSquare = (selectedPiece.X, selectedPiece.Y);
             (int x, int y) destSquare = (squareCoord);
+            char pieceName = selectedPiece.Name;
 
-            // Manages piece movement first in the matrix then in the UI
-            if (selectedPiece!.Name == 'P') ManagePawnPromotion(selectedPiece, destSquare);
+            if (pieceName == 'P' &&
+                IsPawnOneRankFromPromoting(selectedPiece))
+            {
+                // Manage pawn promotion
+                char promotedPieceName = Promotion!(turn, destSquare);
+                Debug.Write($"\n********* Promoted piece: '{promotedPieceName}' *********\n");
+                pieceName = promotedPieceName;
+            }
 
+            // Manage piece movement in the matrix
             chessBoard[originSquare.y, originSquare.x] = null;
             chessBoard[destSquare.y, destSquare.x] = new Piece(destSquare.x, destSquare.y, 
-                                                               selectedPiece.Name, selectedPiece.Color);
+                                                               pieceName, selectedPiece.Color);
 
-            if (selectedPiece.Name == 'K')
+            if (pieceName == 'K')
             {
-                if (!isKingFirstMove[turn]) //ManageFirstKingMove(destSquare);
-                {
+                if (!isKingFirstMove[turn])
+                { 
+                    // Manage first king move
                     var kingDestSquare = destSquare;
                     isKingFirstMove[turn] = true;
 
@@ -143,9 +153,10 @@ namespace ChessGame
 
                 whiteAndBlackKingPos[turn] = destSquare;
             }
-            else if (selectedPiece.Name == 'R') ManageFirstRookMove(originSquare);
+            else if (pieceName == 'R') ManageFirstRookMove(originSquare);
 
-            OnPieceMovement(new UIPieceMovementEventArgs(destSquare, currentPlayer[turn], selectedPiece.Name), 
+            // Manage piece movement in the UI
+            OnPieceMovement(new UIPieceMovementEventArgs(destSquare, currentPlayer[turn], pieceName), 
                             new UIClockTickEventArgs(turn));
 
 
@@ -154,15 +165,18 @@ namespace ChessGame
 
             if (!isCheck && IsDraw()) OnGameFinish(new GameFinishEventArgs(oppositeClock, "Draw"));
 
-        // #####
-        // final things
+
+        // *******************************************************************
+        //                              Final Things
+
             chessBoard.MovePawnTowardsBlackOrWhite = -1 * (turn * 2 - 1);
             HasLastClickedButtonChangedColor = true;
             IsLastClickedButtonNull = true;
             turn = (turn + 1) % 2;
             selectedPiece = null;
             ChessBoard.PrintMovesThatCanStopCheck(piecesAbleToStopCheck);
-        // #####
+
+        // *******************************************************************
         }
 
 
@@ -180,8 +194,6 @@ namespace ChessGame
             // keeps only the position of the piece, removes all other moves
             if (lastMovedPiece.Name == 'P' || lastMovedPiece.Name == 'N')
                 validMoves.RemoveAll(square => square.x != lastMovedPiece.X && square.y != lastMovedPiece.Y);
-
-            //ManageSituationAfterCheck(opponentKing, lastMovedPiece);
 
             var squaresBetweenKingAndThePieceThatGaveCheck = new List<(int x, int y)>();
             squaresBetweenKingAndThePieceThatGaveCheck.AddRange(validMoves);
@@ -291,14 +303,14 @@ namespace ChessGame
 
                 validMoves = chessBoard.CalculateMoves(piece);
 
-                // to remove straight moves of the PAWN, by one square and/or two squares in case the pawn hasn't been moved yet
+                // to remove straight moves of the Pawn, by one square and/or two squares in case the pawn hasn't been moved yet
                 if (piece.Name == 'P')
                 {
                     RemoveSquaresFromList(validMoves, (piece.X, piece.Y - chessBoard.MovePawnTowardsBlackOrWhite));
                     RemoveSquaresFromList(validMoves, (piece.X, piece.Y - chessBoard.MovePawnTowardsBlackOrWhite * 2));
                 }
 
-                tmpKingMoves.RemoveAll(square => IsSquareInList(validMoves, square)); // strange but ok
+                tmpKingMoves.RemoveAll(square => IsSquareInList(validMoves, square));
             }
             
             validMoves.Clear();  // if this is removed than validMoves will contain the moves of the piece that protects the one that gave check
@@ -310,8 +322,8 @@ namespace ChessGame
         {
             RemoveMovesThatTargetPiecesOfSameColor(ref validMoves, king.Color);
 
-            // Removes the king's moves that involve capturing
-            // a protected piece of the opponent.
+            // Removes the king's moves that involve
+            // capturing a protected piece of the opponent.
             foreach (var square in validMoves)
             {
                 if (chessBoard.IsSquareNull(square)) continue;
@@ -321,8 +333,7 @@ namespace ChessGame
                 tmpKingMoves.AddRange(validMoves);
 
                 if (IsPieceNearKingProtected(king, pieceNearKingPos))
-                    // King cannot capture the protected piece
-                    RemoveSquaresFromList(tmpKingMoves, pieceNearKingPos);
+                    RemoveSquaresFromList(tmpKingMoves, pieceNearKingPos); // King cannot capture the protected piece
 
                 validMoves.Clear();
                 validMoves.AddRange(tmpKingMoves);
@@ -344,7 +355,6 @@ namespace ChessGame
         }
 
 
-        // problem: if i return back the rook it probably count's as not yet moved
         private void ManageFirstRookMove((int x, int y) rookPosition)
         {
             if (rookPosition.x == (int)Files.a && rookPosition.y == currentBackRank)
@@ -375,17 +385,6 @@ namespace ChessGame
                                  (chessBoard.IsSquareNull(square) || chessBoard[square].Name == 'K'));
         }
 
-
-        private void ManagePawnPromotion(Piece selectedPawn, (int x, int y) destinationSquare)
-        {
-            if (!IsPawnOneRankFromPromoting(selectedPawn)) return;
-
-            var promotion = new PromotionForm(turn);
-            promotion.ShowDialog();
-
-            selectedPiece = new Piece(destinationSquare.x, destinationSquare.y, promotion.PromotedPieceName, selectedPawn.Color);
-            Debug.Write($"\nPromotion: {promotion.Name}\n");
-        }
 
 
         //=============================================================================
@@ -435,7 +434,6 @@ namespace ChessGame
             isCheck = false;
             return true;
         }
-        
 
         private bool IsCastleLegal(int startingFile, int endingFile, bool isRookFirstMove)
         {

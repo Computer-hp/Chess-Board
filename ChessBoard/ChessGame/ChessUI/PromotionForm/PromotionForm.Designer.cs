@@ -33,59 +33,77 @@ namespace ChessUI
         {
             SuspendLayout();
             // 
-            // Form2
+            // PromotionForm
             // 
             AutoScaleMode = AutoScaleMode.None;
+            BackColor = Color.Black;
             BackgroundImageLayout = ImageLayout.None;
             ClientSize = new Size(68, 280);
             ControlBox = false;
             FormBorderStyle = FormBorderStyle.FixedToolWindow;
             MaximizeBox = false;
             MinimizeBox = false;
-            Name = "Form2";
+            Name = "PromotionForm";
             RightToLeft = RightToLeft.No;
             ShowIcon = false;
-            BackColor = Color.Black;
             ResumeLayout(false);
         }
 
-
-        private void InitializePromotionForm()
+        private void InitializePromotionForm(Point buttonScreenPos)
         {
-            // this.StartPosition = FormStartPosition.CenterScreen; --> make the form spawn under or above the cell.
+            this.Padding = new Padding(0);
             this.MinimumSize = new Size(FORM_WIDTH, FORM_HEIGHT);
             this.MaximumSize = new Size(FORM_WIDTH, FORM_HEIGHT);
             this.Size = new Size(FORM_WIDTH, FORM_HEIGHT);
+            this.StartPosition = FormStartPosition.Manual;
+            this.Location = new Point(buttonScreenPos.X, buttonScreenPos.Y);
+        }
+        
+        private void InitializeGrid()
+        {
+            grid.Dock = DockStyle.Fill;
+
+            grid.ColumnCount = 1;
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+
+            grid.RowCount = NUMBER_OF_PROMOTABLE_PIECES;
+            grid.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
+
+            this.Controls.Add(grid);
         }
 
 
-        private void InitializePromotionFormComponents(PieceColor color, char notation, int counter)
+        private void InitializePromotionFormButtons(PieceColor color, char notation, int buttonX, int buttonY)
         {
-            Bitmap resizedImage = PieceImages.GetPieceImage(color, notation);
+            Bitmap buttonImage = PieceImages.GetPieceImage(color, notation);
 
             Button button = new()
             {
-                Width = BUTTON_WIDTH,
-                Height = BUTTON_HEIGHT,
-                Left = (FORM_WIDTH - BUTTON_WIDTH) / 2,
-                Top = counter,
+                // Width = BUTTON_SIZE,
+                // Height = BUTTON_SIZE,
+                // Location = new Point(0, 0),
+                Dock = DockStyle.Fill,
                 Name = notation.ToString(),
                 BackColor = Color.Ivory,
                 Padding = new Padding(0),
                 Margin = new Padding(0),
                 FlatStyle = FlatStyle.Flat,
                 FlatAppearance = { BorderSize = 0 },
-                BackgroundImage = resizedImage,
-                BackgroundImageLayout = ImageLayout.Zoom
+                BackgroundImage = buttonImage,
+                BackgroundImageLayout = ImageLayout.Zoom,
             };
 
             button.Click += Piece_Promote;
-            this.Controls.Add(button);
+            grid.Controls.Add(button, buttonX, buttonY);
         }
 
         #endregion
         
-        private const int FORM_WIDTH  = 68;
-        private const int FORM_HEIGHT = 260;
+        private const int FORM_WIDTH  = BUTTON_SIZE;
+        private const int FORM_HEIGHT = BUTTON_SIZE * NUMBER_OF_PROMOTABLE_PIECES;
+        private TableLayoutPanel grid = new();
     }
 }
