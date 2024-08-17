@@ -27,8 +27,10 @@ namespace ChessGame
         private Piece? selectedPiece = null;
         private (int x, int y)[] whiteAndBlackKingPos = new (int x, int y)[2];
 
-        private List<(int x, int y)> validMoves     = new();
-        private List<(int x, int y)> validKingMoves = new();
+        private List<(int x, int y)> validMoves             = new();
+        private List<(int x, int y)> validKingMoves         = new();
+        private List<(int x, int y)> piecesThatPinnedAPiece = new();
+        private List<(int x, int y)> pinnedPieces           = new();
         private Dictionary<(int x, int y), List<(int validX, int validY)>> piecesAbleToStopCheck = new();
 
         public const int SQUARE_SIZE = 70;
@@ -57,7 +59,7 @@ namespace ChessGame
 
         public void ManageUIClickedButton((int x, int y) squareCoord)
         {
-            var clickedSquare = chessBoard[squareCoord];
+            Piece clickedSquare = chessBoard[squareCoord];
 
             if (!IsPieceClicked(clickedSquare) && selectedPiece is null) return;
 
@@ -96,7 +98,8 @@ namespace ChessGame
                 return;
             }
             else if (!IsMoveLegal(squareCoord) ||
-                     (isCheck && !IsMoveLegalWhenCheck(squareCoord)))
+                     (isCheck && !IsMoveLegalWhenCheck(squareCoord)) ||
+                     pinnedPieces.Contains(squareCoord))
             {
                 // An illegal move is played
                 selectedPiece = null;
@@ -180,6 +183,15 @@ namespace ChessGame
         }
 
 
+        private void CheckIfPiecePinnedOpponentPiece((int x, int y) opponentKingPos, (int x, int y) destinationSquare)
+        {
+            var direction = DefineDirectionTowardsKing(selectedPiece.Name, opponentKingPos, destinationSquare);
+            validMoves = chessBoard.CalculateMoves(chessBoard[destinationSquare.y, destinationSquare.x], direction);
+            
+            foreach ()
+        }
+
+
         private void ManageSituationAfterPieceMovement((int x, int y) destinationSquare)
         {
             var lastMovedPiece = chessBoard[destinationSquare];
@@ -189,7 +201,11 @@ namespace ChessGame
             int oppositeKingIdx = (turn + 1) % 2;
             Piece opponentKing = chessBoard[whiteAndBlackKingPos[oppositeKingIdx]];
 
-            if (!HasPieceGivenCheck((opponentKing.X, opponentKing.Y), destinationSquare)) return;
+            if (!HasPieceGivenCheck((opponentKing.X, opponentKing.Y), destinationSquare))
+            {
+                CheckIfPiecePinnedOpponentPiece((opponentKing.X, opponentKing.Y), destinationSquare);
+                return;
+            }
 
             // keeps only the position of the piece, removes all other moves
             if (lastMovedPiece.Name == 'P' || lastMovedPiece.Name == 'N')
@@ -216,6 +232,8 @@ namespace ChessGame
             validMoves = chessBoard.CalculateMoves(opponentKing); // this is done to check later if king is able to move
             validMoves.RemoveAll(kingMove => kingMove.x == lastMovedPiece.X || kingMove.y == lastMovedPiece.Y);
 
+            // Removing of illegal king moves
+
             int sign = 0;
 
             if ((lastMovedPiece.X > opponentKing.X && lastMovedPiece.Y > opponentKing.Y) ||
@@ -226,10 +244,10 @@ namespace ChessGame
                      (lastMovedPiece.X < opponentKing.X && lastMovedPiece.Y > opponentKing.Y))
                 sign = 1;
 
-
             for (int i = validMoves.Count - 1, movesToRemove = 2; i >= 0 && movesToRemove > 0; i--)
                 if (Math.Abs(validMoves[i].x + sign * validMoves[i].y) == Math.Abs(lastMovedPiece.X + sign * lastMovedPiece.Y))
                 {
+                    // Removes king moves which are in the same direction as the check.
                     validMoves.RemoveAt(i);
                     movesToRemove--;
                 }
@@ -546,7 +564,7 @@ namespace ChessGame
 
         private bool IsCheck(ValueTuple<int, int> kingPosition)
         {
-            if (IsSquareInList(validMoves, kingPosition)) return true;
+            if (IsSquareInList(validMoves, kingPosition)) return true; // maybe it's better to check the last move of the list because it should be the king position.
             
             return false;
         }

@@ -6,15 +6,6 @@ using System.Diagnostics;
 using System.DirectoryServices;
 
 
-// TODO  Pin on pieces
-
-// Checkmate doesn't work for the knight
-
-// FIX: king is able to move in the same direction as the one of the piece that has given check
-//      this is because the CalculateMoves method calculates the moves until the position of the king.
-//      if there are squares after the king, it should not be able to move.
-
-
 namespace ChessUI
 {
     public partial class ChessBoardForm : Form

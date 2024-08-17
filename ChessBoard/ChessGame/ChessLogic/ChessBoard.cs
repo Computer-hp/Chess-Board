@@ -115,8 +115,6 @@ namespace ChessLogic
 
         public List<(int x, int y)> CalculateMoves(Piece piece, Directions? direction = null)
         {
-            // ValidMoves.Clear();
-
             switch (piece.Name)
             {
                 case 'P': return CalculatePawnMoves(piece);
@@ -198,6 +196,11 @@ namespace ChessLogic
             return validMoves;
         }
 
+        
+        // Should add other parameters to be able to get all the moves to the king, so later i can control
+        // if for (move in moves) --> (chessBoard[move] != null) counter++;
+        // if (counter == 1), there is a piece between piece that gave check and king, so it's "pinned".
+        // if (counter == 0), there are no pieces in between, so it's "check".
 
         private void CalculateLinearDirections(List<(int x, int y)> validMoves, Piece piece, (int x, int y) incrementForNextSquare, int times)
         {
