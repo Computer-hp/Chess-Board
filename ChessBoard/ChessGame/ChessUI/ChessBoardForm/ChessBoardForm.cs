@@ -77,7 +77,7 @@ namespace ChessUI
         {
             if (game.IsPieceClicked(destinationSquare))
             {
-                if (lastClickedButton is not null)
+                if (lastClickedButton != null)
                     lastClickedButton.BackColor = (Color)previousButtonColor!;
 
                 else
@@ -87,7 +87,7 @@ namespace ChessUI
                 }
             }
 
-            else if (lastClickedButton is not null)
+            else if (lastClickedButton != null)
                 lastClickedButton.BackColor = (Color)previousButtonColor!;
         }
 

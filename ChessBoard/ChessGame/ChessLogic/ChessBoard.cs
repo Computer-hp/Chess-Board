@@ -178,10 +178,10 @@ namespace ChessLogic
 
             List<(int x, int y)> validMoves = new();
 
-            if (direction is not null)
+            if (direction != null)
             {
                 ValueTuple<int, int> incrementForNextSquare = linearDirections.First(storedDirection => storedDirection.direction == direction).moveBy;
-                CalculateLinearDirections(validMoves, piece, incrementForNextSquare, times);
+                CalculateLinearDirections(validMoves, piece, incrementForNextSquare, times, true);
                 return validMoves;
             }
 
@@ -202,7 +202,7 @@ namespace ChessLogic
         // if (counter == 1), there is a piece between piece that gave check and king, so it's "pinned".
         // if (counter == 0), there are no pieces in between, so it's "check".
 
-        private void CalculateLinearDirections(List<(int x, int y)> validMoves, Piece piece, (int x, int y) incrementForNextSquare, int times)
+        private void CalculateLinearDirections(List<(int x, int y)> validMoves, Piece piece, (int x, int y) incrementForNextSquare, int times, bool searchingForKing = false)
         {
             int destinationX = piece.X, destinationY = piece.Y;
 
@@ -213,7 +213,17 @@ namespace ChessLogic
 
                 if (IsSquareOutsideTheBoard((destinationX, destinationY))) return;
 
-                if (!IsSquareNull((destinationX, destinationY)))
+                if (searchingForKing)
+                {
+                    if (board[destinationY, destinationX] != null
+                        && board[destinationY, destinationX].Name == 'K')
+                    {
+                        validMoves.Add((destinationX, destinationY));
+                        return;
+                    }
+                }
+
+                else if (!IsSquareNull((destinationX, destinationY)))
                 {
                     validMoves.Add((destinationX, destinationY));
                     return;

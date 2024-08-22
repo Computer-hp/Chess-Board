@@ -29,8 +29,7 @@ namespace ChessGame
 
         private List<(int x, int y)> validMoves             = new();
         private List<(int x, int y)> validKingMoves         = new();
-        private List<(int x, int y)> piecesThatPinnedAPiece = new();
-        private List<(int x, int y)> pinnedPieces           = new();
+        private Dictionary<Piece, Piece> piecesThatPinnedOpponentPieces = new();
         private Dictionary<(int x, int y), List<(int validX, int validY)>> piecesAbleToStopCheck = new();
 
         public const int SQUARE_SIZE = 70;
@@ -61,12 +60,12 @@ namespace ChessGame
         {
             Piece clickedSquare = chessBoard[squareCoord];
 
-            if (!IsPieceClicked(clickedSquare) && selectedPiece is null) return;
+            if (!IsPieceClicked(clickedSquare) && selectedPiece == null) return;
 
             int firstRank = (int)Ranks.First;
             currentBackRank = Math.Abs((int)currentPlayer[turn] * firstRank - firstRank);
 
-            if (selectedPiece is null)
+            if (selectedPiece == null)
             {
                 // Piece is selected
                 selectedPiece = chessBoard[squareCoord];
@@ -99,7 +98,7 @@ namespace ChessGame
             }
             else if (!IsMoveLegal(squareCoord) ||
                      (isCheck && !IsMoveLegalWhenCheck(squareCoord)) ||
-                     pinnedPieces.Contains(squareCoord))
+                     IsPiecePinned(chessBoard[selectedPiece.Y, selectedPiece.X]))
             {
                 // An illegal move is played
                 selectedPiece = null;
@@ -109,19 +108,19 @@ namespace ChessGame
             }
 
             (int x, int y) originSquare = (selectedPiece.X, selectedPiece.Y);
-            (int x, int y) destSquare = (squareCoord);
+            (int x, int y) destSquare = squareCoord;
             char pieceName = selectedPiece.Name;
 
             if (pieceName == 'P' &&
                 IsPawnOneRankFromPromoting(selectedPiece))
             {
-                // Manage pawn promotion
+                // *** Manage pawn promotion ***
                 char promotedPieceName = Promotion!(turn, destSquare);
                 Debug.Write($"\n********* Promoted piece: '{promotedPieceName}' *********\n");
                 pieceName = promotedPieceName;
             }
 
-            // Manage piece movement in the matrix
+            // *** Manage piece movement in the matrix ***
             chessBoard[originSquare.y, originSquare.x] = null;
             chessBoard[destSquare.y, destSquare.x] = new Piece(destSquare.x, destSquare.y, 
                                                                pieceName, selectedPiece.Color);
@@ -130,7 +129,7 @@ namespace ChessGame
             {
                 if (!isKingFirstMove[turn])
                 { 
-                    // Manage first king move
+                    // *** Manage first king move ***
                     var kingDestSquare = destSquare;
                     isKingFirstMove[turn] = true;
 
@@ -158,11 +157,57 @@ namespace ChessGame
             }
             else if (pieceName == 'R') ManageFirstRookMove(originSquare);
 
-            // Manage piece movement in the UI
+            // *** Manage piece movement in the UI ***
             OnPieceMovement(new UIPieceMovementEventArgs(destSquare, currentPlayer[turn], pieceName), 
                             new UIClockTickEventArgs(turn));
 
+            // *** Checking for pins ***
 
+            (int x, int y) opponentKingPos = whiteAndBlackKingPos[(turn + 1) % 2];
+            
+            foreach (var piece in chessBoard)
+            {
+                if (piece == null || (int)piece.Color != turn || piece.Name == 'P' || piece.Name == 'N')
+                    continue;
+
+                var direction = DefineDirectionTowardsKing(piece.Name, opponentKingPos, (piece.X, piece.Y));
+
+                if (direction == null) continue;
+
+                validMoves = chessBoard.CalculateMoves(piece, direction);
+
+                if (validMoves.Last() != opponentKingPos) continue;
+
+                int counter = 0;
+                Piece pinnedPiece = null;
+
+                // Excludes the last piece which is opponent's king so it's not count as a piece that blocks the pin
+                foreach (var square in validMoves.Take(validMoves.Count - 1))
+                    if (chessBoard[square] != null)
+                    {
+                        counter++;
+                        pinnedPiece = chessBoard[square];
+                    }
+
+                // find a way to remove the pinned piece
+                // also when moving a piece which previously pinned a piece, and now with moving pins anoter piece, i have to remove the old pinned piece
+                if (counter != 1)
+                {
+                    // Check if before this piece pinned another piece
+                    if (piecesThatPinnedOpponentPieces.ContainsKey(piece))
+                        piecesThatPinnedOpponentPieces.Remove(piece);
+
+                    continue;
+                }
+
+                foreach (var key in piecesThatPinnedOpponentPieces.Keys)
+                    if ((key.X, key.Y) == (originSquare))
+                        piecesThatPinnedOpponentPieces.Remove(key);
+
+                piecesThatPinnedOpponentPieces[piece] = pinnedPiece;
+            }
+
+            PrintPinnedPieces();
             ManageSituationAfterPieceMovement(squareCoord);
             int oppositeClock = (turn + 1) % 2;
 
@@ -183,15 +228,6 @@ namespace ChessGame
         }
 
 
-        private void CheckIfPiecePinnedOpponentPiece((int x, int y) opponentKingPos, (int x, int y) destinationSquare)
-        {
-            var direction = DefineDirectionTowardsKing(selectedPiece.Name, opponentKingPos, destinationSquare);
-            validMoves = chessBoard.CalculateMoves(chessBoard[destinationSquare.y, destinationSquare.x], direction);
-            
-            foreach ()
-        }
-
-
         private void ManageSituationAfterPieceMovement((int x, int y) destinationSquare)
         {
             var lastMovedPiece = chessBoard[destinationSquare];
@@ -201,11 +237,44 @@ namespace ChessGame
             int oppositeKingIdx = (turn + 1) % 2;
             Piece opponentKing = chessBoard[whiteAndBlackKingPos[oppositeKingIdx]];
 
-            if (!HasPieceGivenCheck((opponentKing.X, opponentKing.Y), destinationSquare))
+            /*if (!HasPieceGivenCheck((opponentKing.X, opponentKing.Y), destinationSquare))
             {
-                CheckIfPiecePinnedOpponentPiece((opponentKing.X, opponentKing.Y), destinationSquare);
                 return;
+            }*/
+
+
+            (int x, int y) opponentKingPos = (opponentKing.X, opponentKing.Y);
+            var lastPieceMoved = chessBoard[destinationSquare.y, destinationSquare.x];
+
+            if (selectedPiece!.Name == 'P' || selectedPiece.Name == 'N')
+                validMoves = chessBoard.CalculateMoves(lastPieceMoved);
+
+            else
+            {
+                var direction = DefineDirectionTowardsKing(selectedPiece.Name, opponentKingPos, destinationSquare);
+                validMoves = chessBoard.CalculateMoves(chessBoard[destinationSquare.y, destinationSquare.x], direction);
             }
+
+            validMoves.Add((destinationSquare.x, destinationSquare.y));  // piece that gives check can also be captured
+                                                                         // (neccessary for Knight and Pawn)
+
+            // checks if the king is not aligned with the piece
+            if (!IsSquareInList(validMoves, opponentKingPos)) return;
+
+            int counter = 0;
+
+            foreach (var move in validMoves.Skip(1).Take(validMoves.Count - 2))
+                // counter represents the number of pieces between the last moved piece aligned with the king
+                if (chessBoard[move] != null)
+                    counter++;
+
+            // no check
+            if (counter > 0) return;
+
+            // check happend
+            isCheck = true;
+            Debug.WriteLine($"\n\n******* IS CHECK = {isCheck} *******\n");
+
 
             // keeps only the position of the piece, removes all other moves
             if (lastMovedPiece.Name == 'P' || lastMovedPiece.Name == 'N')
@@ -232,7 +301,7 @@ namespace ChessGame
             validMoves = chessBoard.CalculateMoves(opponentKing); // this is done to check later if king is able to move
             validMoves.RemoveAll(kingMove => kingMove.x == lastMovedPiece.X || kingMove.y == lastMovedPiece.Y);
 
-            // Removing of illegal king moves
+            // *** Removing of illegal king moves ***
 
             int sign = 0;
 
@@ -274,7 +343,8 @@ namespace ChessGame
 
             Debug.Write($"\n'direction' = {direction}\n");
 
-            if (pieceName == 'R' || direction is not null) return direction;
+            // it should be able to return also null
+            if (pieceName == 'R' || direction != null) return direction;
 
             if (PieceMovesDiagonally(pieceName))
                 direction = FindDiagonalDirection(opponentKingPos, destinationSquare);
@@ -318,7 +388,6 @@ namespace ChessGame
                     piece.Color == king.Color)
                     continue;
 
-
                 validMoves = chessBoard.CalculateMoves(piece);
 
                 // to remove straight moves of the Pawn, by one square and/or two squares in case the pawn hasn't been moved yet
@@ -358,8 +427,11 @@ namespace ChessGame
             }
         }
 
+
         private void ControlIfPieceIsAbleToStopCheck(List<(int x, int y)> criticalSquares, Piece piece)
         {
+            if (IsPiecePinned(piece)) return;
+
             List<ValueTuple<int, int>> tmpMoves = new();
 
             foreach (var square in validMoves)
@@ -405,12 +477,12 @@ namespace ChessGame
 
 
 
-        //=============================================================================
+        //======================================================================================================================================================
 
 
         private bool IsPieceClicked(Piece clickedSquare)
         {
-            return clickedSquare is not null && 
+            return clickedSquare != null && 
                    clickedSquare.Color == currentPlayer[turn];
         }
         
@@ -520,6 +592,15 @@ namespace ChessGame
             return false;
         }
 
+        private bool IsPiecePinned(Piece piece)
+        {
+            foreach (var pinnedPiece in piecesThatPinnedOpponentPieces.Values)
+                if (pinnedPiece == piece)
+                    return true;
+
+            return false;
+        }
+
         private bool IsDraw()
         {
             int oppositeColor = (turn + 1) % 2;
@@ -543,40 +624,15 @@ namespace ChessGame
             return true;
         }
 
-        private bool HasPieceGivenCheck((int x, int y) opponentKingPos, (int x, int y) destinationSquare)
-        {
-            var lastPieceMoved = chessBoard[destinationSquare.y, destinationSquare.x];
-
-            if (selectedPiece!.Name == 'P' || selectedPiece.Name == 'N')
-                validMoves = chessBoard.CalculateMoves(lastPieceMoved);
-
-            else
-            {
-                var direction = DefineDirectionTowardsKing(selectedPiece.Name, opponentKingPos, destinationSquare);
-                validMoves = chessBoard.CalculateMoves(chessBoard[destinationSquare.y, destinationSquare.x], direction);
-            }
-
-            validMoves.Add((destinationSquare.x, destinationSquare.y));  // piece that gives check can also be captured (neccessary for Knight and Pawn)
-            isCheck = IsCheck(opponentKingPos);
-            Debug.WriteLine($"\n\n******* IS CHECK = {isCheck} *******\n");
-            return isCheck;
-        }
-
-        private bool IsCheck(ValueTuple<int, int> kingPosition)
-        {
-            if (IsSquareInList(validMoves, kingPosition)) return true; // maybe it's better to check the last move of the list because it should be the king position.
-            
-            return false;
-        }
 
         private bool IsCheckmate()
         {
             return !validKingMoves.Any() && piecesAbleToStopCheck.Count == 0; // maybe incorrect
         }
 
-        private static bool IsSquareInList(List<ValueTuple<int, int>>? list, ValueTuple<int, int> destinationSquare)
+        private static bool IsSquareInList(List<ValueTuple<int, int>> list, ValueTuple<int, int> destinationSquare)
         {
-            return list!.Exists(square => square == destinationSquare);
+            return list.Exists(square => square == destinationSquare);
         }
 
         private bool IsPieceSameColorAsPlayer((int x, int y) destinationSquare)
@@ -606,6 +662,15 @@ namespace ChessGame
             dictionary.Clear();
         }
 
+        private void PrintPinnedPieces()
+        {
+            Debug.Write($"\n*** Pinned pieces ***\n");
+
+            foreach (var e in piecesThatPinnedOpponentPieces)
+                Debug.Write($"origin: ({e.Key.X}, {e.Key.Y}), pinnedPiece: ({e.Value.X}, {e.Value.Y})\n");
+
+            Debug.Write("\n********************************************************\n");
+        }
 
 
         protected virtual void OnCastle(CastleEventArgs e)
